@@ -66,6 +66,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
   }
 
   .nav-brand {
@@ -73,6 +74,7 @@
       align-items: center;
       gap: 12px;
       cursor: pointer;
+      flex: 0 0 auto;
   }
 
   .brand-logo {
@@ -112,13 +114,14 @@
       padding: 6px;
       border-radius: 12px;
       gap: 4px;
+      flex: 0 1 auto;
   }
 
   .nav-link {
       padding: 8px 20px;
       border: none;
       background: transparent;
-      color: var(--text-gray);
+      color: var(--text-muted);
       font-weight: 500;
       font-size: 0.9rem;
       cursor: pointer;
@@ -127,11 +130,11 @@
   }
 
   .nav-link:hover {
-      color: var(--text-dark);
+      color: var(--text);
   }
 
   .nav-link.active {
-      background: var(--white);
+      background: var(--bg);
       color: var(--primary);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
@@ -140,6 +143,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex: 0 0 auto;
+      justify-content: flex-end;
+  }
+
+  .nav-auth .btn-secondary,
+  .nav-auth .btn-primary {
+      white-space: nowrap;
   }
 
   .nav-icon-btn {
@@ -232,6 +242,7 @@
       .nav-menu {
           background: transparent;
           padding: 0;
+          gap: 0.15rem;
       }
 
       .nav-link:first-child {
@@ -242,9 +253,40 @@
           display: none;
       }
 
+      .nav-auth.logged-in .btn-secondary {
+          display: inline-flex;
+          padding: 0 12px;
+          font-size: 0.78rem;
+      }
+
       .btn-primary {
           padding: 8px 16px;
           font-size: 0.8rem;
+      }
+  }
+
+  @media (max-width: 980px) {
+      .navbar {
+          padding: 0 3%;
+      }
+
+      .nav-container {
+          gap: 0.6rem;
+      }
+
+      .nav-link {
+          padding: 8px 12px;
+          font-size: 0.82rem;
+      }
+
+      .nav-auth {
+          gap: 8px;
+      }
+
+      .nav-auth .btn-secondary,
+      .nav-auth .btn-primary {
+          padding-left: 14px;
+          padding-right: 14px;
       }
   }
 
@@ -2441,6 +2483,24 @@
   min-height: 100vh;
 }
 
+.public-directory-page .dash-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  border-bottom: none;
+  color: white;
+  padding-top: 120px;
+  text-align: center;
+}
+
+.public-directory-page .dash-header .dash-sub {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.public-page-back {
+  margin-bottom: 1rem;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 .directory-card,
 .plan-card {
   background: var(--bg);
@@ -2449,6 +2509,24 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+}
+
+.directory-card .buyer-prop-body,
+.directory-card .buyer-prop-meta,
+.directory-card .buyer-prop-meta span {
+  min-width: 0;
+}
+
+.directory-card .buyer-prop-meta {
+  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.directory-card .buyer-prop-meta span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .directory-card-top {

@@ -47,13 +47,7 @@ export default function AgencyDetailPage({ agency: selectedAgency, setPage }) {
   return (
     <div className="dashboard public-directory-page">
       <div className="dash-header">
-        <div className="dashboard-brand-row">
-          <div className="dashboard-brand" onClick={() => setPage("home")}>
-            <div className="brand-logo"><div className="logo-dot" /></div>
-            <span className="brand-name">UrbanKeys</span>
-          </div>
-          <button className="btn-ghost" onClick={() => setPage("agencies")}>Agencies</button>
-        </div>
+        <button className="btn-ghost public-page-back" onClick={() => setPage("agencies")}>Back to Agencies</button>
         <h2 className="dash-welcome">{agency?.name || "Agency Details"}</h2>
         <p className="dash-sub">{agency?.city || agency?.country || "Agency profile and agents."}</p>
       </div>

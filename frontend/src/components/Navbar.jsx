@@ -60,7 +60,7 @@ export default function Navbar({ page, setPage, user, onLogout }) {
         </div>
 
         {/* Right: Auth Buttons */}
-        <div className="nav-auth">
+        <div className={`nav-auth ${user ? "logged-in" : ""}`}>
           {user ? (
             <>
               {user.role === "buyer" && (

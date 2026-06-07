@@ -82,15 +82,6 @@ export default function PlansPage({ user, setPage, showToast }) {
   return (
     <div className="dashboard public-directory-page">
       <div className="dash-header">
-        <div className="dashboard-brand-row">
-          <div className="dashboard-brand" onClick={() => setPage("home")}>
-            <div className="brand-logo"><div className="logo-dot" /></div>
-            <span className="brand-name">UrbanKeys</span>
-          </div>
-          <button className="btn-ghost" onClick={() => setPage(user ? "dashboard" : "home")}>
-            {user ? "Dashboard" : "Home"}
-          </button>
-        </div>
         <h2 className="dash-welcome">Plans</h2>
         <p className="dash-sub">Choose a listing plan and manage seller quota.</p>
       </div>
