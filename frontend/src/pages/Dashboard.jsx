@@ -9,6 +9,7 @@ import BuyerDashboard from "./BuyerDashboard";
 import FavoritesPage from "./FavoritesPage";
 import BuyerProfilePage from "./BuyerProfilePage";
 import SellerMessagesPage from "./SellerMessagesPage";
+import BuyerMessagesPage from "./BuyerMessagesPage";
 import ReportBuilderPage from "./reports/ReportBuilderPage";
 
 export default function Dashboard({ user, setPage: setRootPage, onLogout, showToast }) {
@@ -70,6 +71,18 @@ export default function Dashboard({ user, setPage: setRootPage, onLogout, showTo
     if (innerPage === "profile") {
       return (
         <BuyerProfilePage
+          user={user}
+          setPage={setInnerPage}
+          setRootPage={setRootPage}
+          onLogout={onLogout}
+          showToast={showToast}
+        />
+      );
+    }
+
+    if (innerPage === "buyerMessages") {
+      return (
+        <BuyerMessagesPage
           user={user}
           setPage={setInnerPage}
           setRootPage={setRootPage}

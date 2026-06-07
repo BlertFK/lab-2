@@ -1,7 +1,8 @@
 const TABS = [
-  { key: "main", label: "Overview" },
-  { key: "favorites", label: "Favorites" },
-  { key: "profile", label: "Profile" },
+  { key: "main",          label: "Overview" },
+  { key: "favorites",     label: "Favorites" },
+  { key: "profile",       label: "Profile" },
+  { key: "buyerMessages", label: "Messages" },
 ];
 
 export default function BuyerSubnav({ activeTab, onChange, onGoHome, onLogout }) {

@@ -1,6 +1,6 @@
 import MessagesPage from "./MessagesPage";
 
-export default function SellerMessagesPage({ user, setPage, setRootPage, onLogout, showToast }) {
+export default function BuyerMessagesPage({ user, setPage, setRootPage, onLogout, showToast }) {
   return (
     <MessagesPage
       user={user}
@@ -8,7 +8,7 @@ export default function SellerMessagesPage({ user, setPage, setRootPage, onLogou
       setRootPage={setRootPage}
       onLogout={onLogout}
       showToast={showToast}
-      role="seller"
+      role="buyer"
     />
   );
 }
