@@ -2,8 +2,12 @@ export default function SellerDashboard({ user, setPage, setRootPage, onLogout }
   const actions = [
     { icon: "🏠", label: "My Properties",  sub: "View and manage your listings",  page: "myProperties"   },
     { icon: "➕", label: "Add Property",    sub: "Create a new listing",           page: "addProperty"    },
+    { icon: "📅", label: "Viewings",        sub: "Approve and track tours",        page: "viewings"       },
+    { icon: "💶", label: "Offers",          sub: "Review buyer offers",            page: "offers"         },
+    { icon: "✅", label: "Transactions",    sub: "Manage accepted deals",          page: "transactions"   },
     { icon: "✉️", label: "Messages",        sub: "View buyer inquiries",           page: "sellerMessages" },
     { icon: "📊", label: "Reports",         sub: "Preview and export reports",     page: "reports"        },
+    { icon: "💳", label: "Plans",           sub: "Review listing limits",          page: "plans", root: true },
   ];
 
   return (
@@ -23,7 +27,7 @@ export default function SellerDashboard({ user, setPage, setRootPage, onLogout }
       <div className="dash-body">
         <div className="dash-cards" style={{ maxWidth: 700 }}>
           {actions.map(a => (
-            <div key={a.page} className="dash-card seller-action-card" onClick={() => setPage(a.page)}
+            <div key={a.page} className="dash-card seller-action-card" onClick={() => a.root ? setRootPage?.(a.page) : setPage(a.page)}
               style={{ cursor: "pointer" }}>
               <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{a.icon}</div>
               <div className="dash-card-label" style={{ fontSize: "0.95rem", fontWeight: 600, textTransform: "none", color: "var(--text)" }}>{a.label}</div>

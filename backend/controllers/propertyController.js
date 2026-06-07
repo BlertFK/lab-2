@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const planService = require("../services/planService");
 
 const createProperty = async (req, res) => {
   if (req.user.role !== "seller")
@@ -14,6 +15,8 @@ const createProperty = async (req, res) => {
   const resolvedStatus = allowedStatuses.includes(status) ? status : "available";
 
   try {
+    await planService.assertCanCreateListing(req.user);
+
     const [result] = await db.query(
       `INSERT INTO properties (title, description, price, location, type, status, image_url, seller_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -22,7 +25,9 @@ const createProperty = async (req, res) => {
     res.status(201).json({ message: "Property created successfully.", propertyId: result.insertId });
   } catch (error) {
     console.error("createProperty error:", error.message);
-    res.status(500).json({ message: "Server error. Please try again." });
+    res.status(error.statusCode || 500).json({
+      message: error.statusCode ? error.message : "Server error. Please try again.",
+    });
   }
 };
 

@@ -1,6 +1,9 @@
 const TABS = [
   { key: "main",          label: "Overview" },
   { key: "favorites",     label: "Favorites" },
+  { key: "viewings",      label: "Viewings" },
+  { key: "offers",        label: "Offers" },
+  { key: "transactions",  label: "Transactions" },
   { key: "profile",       label: "Profile" },
   { key: "buyerMessages", label: "Messages" },
 ];

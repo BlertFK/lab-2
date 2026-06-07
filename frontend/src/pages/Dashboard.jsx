@@ -11,10 +11,15 @@ import BuyerProfilePage from "./BuyerProfilePage";
 import SellerMessagesPage from "./SellerMessagesPage";
 import BuyerMessagesPage from "./BuyerMessagesPage";
 import ReportBuilderPage from "./reports/ReportBuilderPage";
+import ViewingsPage from "./ViewingsPage";
+import OffersPage from "./OffersPage";
+import TransactionsPage from "./TransactionsPage";
+import TransactionDetailPage from "./TransactionDetailPage";
 
 export default function Dashboard({ user, setPage: setRootPage, onLogout, showToast }) {
   const [innerPage, setInnerPage] = useState(() => localStorage.getItem("dashboardView") || "main");
   const [editTarget, setEditTarget] = useState(null);
+  const [transactionTarget, setTransactionTarget] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
@@ -58,6 +63,18 @@ export default function Dashboard({ user, setPage: setRootPage, onLogout, showTo
     if (innerPage === "sellerMessages") {
       return <SellerMessagesPage user={user} setPage={setInnerPage} setRootPage={setRootPage} onLogout={onLogout} showToast={showToast}/>;
     }
+    if (innerPage === "viewings") {
+      return <ViewingsPage user={user} setPage={setInnerPage} setRootPage={setRootPage} onLogout={onLogout} showToast={showToast} />;
+    }
+    if (innerPage === "offers") {
+      return <OffersPage user={user} setPage={setInnerPage} setRootPage={setRootPage} onLogout={onLogout} showToast={showToast} />;
+    }
+    if (innerPage === "transactions") {
+      return <TransactionsPage user={user} setPage={setInnerPage} setRootPage={setRootPage} onLogout={onLogout} showToast={showToast} setTransactionTarget={setTransactionTarget} />;
+    }
+    if (innerPage === "transactionDetail") {
+      return <TransactionDetailPage user={user} transactionId={transactionTarget} setPage={setInnerPage} setRootPage={setRootPage} onLogout={onLogout} showToast={showToast} />;
+    }
     if (innerPage === "reports") {
       return <ReportBuilderPage setPage={setInnerPage} />;
     }
@@ -84,6 +101,56 @@ export default function Dashboard({ user, setPage: setRootPage, onLogout, showTo
       return (
         <BuyerMessagesPage
           user={user}
+          setPage={setInnerPage}
+          setRootPage={setRootPage}
+          onLogout={onLogout}
+          showToast={showToast}
+        />
+      );
+    }
+
+    if (innerPage === "viewings") {
+      return (
+        <ViewingsPage
+          user={user}
+          setPage={setInnerPage}
+          setRootPage={setRootPage}
+          onLogout={onLogout}
+          showToast={showToast}
+        />
+      );
+    }
+
+    if (innerPage === "offers") {
+      return (
+        <OffersPage
+          user={user}
+          setPage={setInnerPage}
+          setRootPage={setRootPage}
+          onLogout={onLogout}
+          showToast={showToast}
+        />
+      );
+    }
+
+    if (innerPage === "transactions") {
+      return (
+        <TransactionsPage
+          user={user}
+          setPage={setInnerPage}
+          setRootPage={setRootPage}
+          onLogout={onLogout}
+          showToast={showToast}
+          setTransactionTarget={setTransactionTarget}
+        />
+      );
+    }
+
+    if (innerPage === "transactionDetail") {
+      return (
+        <TransactionDetailPage
+          user={user}
+          transactionId={transactionTarget}
           setPage={setInnerPage}
           setRootPage={setRootPage}
           onLogout={onLogout}

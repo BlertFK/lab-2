@@ -45,10 +45,22 @@ export default function Navbar({ page, setPage, user, onLogout }) {
           >
             Properties
           </button>
+          <button
+            className={`nav-link ${page === "agencies" || page === "agencyDetail" ? "active" : ""}`}
+            onClick={() => setPage("agencies")}
+          >
+            Agencies
+          </button>
+          <button
+            className={`nav-link ${page === "plans" ? "active" : ""}`}
+            onClick={() => setPage("plans")}
+          >
+            Plans
+          </button>
         </div>
 
         {/* Right: Auth Buttons */}
-        <div className="nav-auth">
+        <div className={`nav-auth ${user ? "logged-in" : ""}`}>
           {user ? (
             <>
               {user.role === "buyer" && (

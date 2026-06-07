@@ -14,6 +14,9 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PropertiesPage from "./pages/PropertiesPage";
 import PropertyDetails from "./pages/PropertyDetails";
+import AgenciesPage from "./pages/AgenciesPage";
+import AgencyDetailPage from "./pages/AgencyDetailPage";
+import PlansPage from "./pages/PlansPage";
 import ReportBuilderPage from "./pages/reports/ReportBuilderPage";
 
 const getPageFromPath = (pathname) => {
@@ -23,6 +26,9 @@ const getPageFromPath = (pathname) => {
   if (pathname === "/dashboard") return "dashboard";
   if (pathname === "/properties") return "properties";
   if (pathname === "/property-details") return "propertyDetails";
+  if (pathname === "/agencies") return "agencies";
+  if (pathname === "/agency-detail") return "agencyDetail";
+  if (pathname === "/plans") return "plans";
   if (pathname === "/reports") return "reports";
   return "home";
 };
@@ -34,6 +40,9 @@ const getPathFromPage = (page) => {
   if (page === "dashboard") return "/dashboard";
   if (page === "properties") return "/properties";
   if (page === "propertyDetails") return "/property-details";
+  if (page === "agencies") return "/agencies";
+  if (page === "agencyDetail") return "/agency-detail";
+  if (page === "plans") return "/plans";
   if (page === "reports") return "/reports";
   return "/";
 };
@@ -56,6 +65,7 @@ export default function App() {
     return pathPage;
   });
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [selectedAgency, setSelectedAgency] = useState(null);
   const [user, setUser] = useState(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
@@ -83,11 +93,17 @@ export default function App() {
   const showToast = useCallback((message, type = "success") => setToast({ message, type }), []);
 
   const setPage = useCallback((pageName, params = {}) => {
-    if (params?.id) {
+    if (params?.id && (pageName === "property-detail" || pageName === "propertyDetails")) {
       setSelectedProperty({ id: params.id });
+    }
+    if (params?.id && (pageName === "agency-detail" || pageName === "agencyDetail")) {
+      localStorage.setItem("activeAgencyId", params.id);
+      setSelectedAgency({ id: params.id });
     }
     if (pageName === "property-detail") {
       setPageState("propertyDetails");
+    } else if (pageName === "agency-detail") {
+      setPageState("agencyDetail");
     } else {
       setPageState(pageName);
     }
@@ -126,9 +142,11 @@ export default function App() {
 
         setUser(restoredUser);
         localStorage.setItem("user", JSON.stringify(restoredUser));
-        setPageState((currentPage) => (
-          currentPage === "reports" ? "reports" : restoredUser.role === "admin" ? "admin" : "dashboard"
-        ));
+        setPageState((currentPage) => {
+          const preservedPages = ["home", "properties", "propertyDetails", "agencies", "agencyDetail", "plans", "reports"];
+          if (preservedPages.includes(currentPage)) return currentPage;
+          return restoredUser.role === "admin" ? "admin" : "dashboard";
+        });
       } catch {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -166,7 +184,7 @@ export default function App() {
     setPageState("home");
   }, [showToast]);
 
-  const showNavbar = page === "home" || page === "properties" || page === "propertyDetails" || (!user && page === "dashboard");
+  const showNavbar = ["home", "properties", "propertyDetails", "agencies", "agencyDetail", "plans"].includes(page) || (!user && page === "dashboard");
 
   return (
     <>
@@ -209,6 +227,27 @@ export default function App() {
 
       {page === "propertyDetails" && (
         <PropertyDetails property={selectedProperty} setPage={setPage} user={user} />
+      )}
+
+      {page === "agencies" && (
+        <>
+          <AgenciesPage setPage={setPage} setSelectedAgency={setSelectedAgency} />
+          <Footer />
+        </>
+      )}
+
+      {page === "agencyDetail" && (
+        <>
+          <AgencyDetailPage agency={selectedAgency} setPage={setPage} />
+          <Footer />
+        </>
+      )}
+
+      {page === "plans" && (
+        <>
+          <PlansPage user={user} setPage={setPage} showToast={showToast} />
+          <Footer />
+        </>
       )}
 
       {!user && page === "dashboard" && (
