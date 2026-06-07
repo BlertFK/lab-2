@@ -3,6 +3,7 @@ export default function SellerDashboard({ user, setPage, setRootPage, onLogout }
     { icon: "🏠", label: "My Properties",  sub: "View and manage your listings",  page: "myProperties"   },
     { icon: "➕", label: "Add Property",    sub: "Create a new listing",           page: "addProperty"    },
     { icon: "✉️", label: "Messages",        sub: "View buyer inquiries",           page: "sellerMessages" },
+    { icon: "📊", label: "Reports",         sub: "Preview and export reports",     page: "reports"        },
   ];
 
   return (
