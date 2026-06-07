@@ -1,18 +1,18 @@
 USE realestate_db;
 
 CREATE TABLE IF NOT EXISTS offers (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  property_id BIGINT UNSIGNED NOT NULL,
-  buyer_id BIGINT UNSIGNED NOT NULL,
-  seller_id BIGINT UNSIGNED NOT NULL,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  property_id INT NOT NULL,
+  buyer_id INT NOT NULL,
+  seller_id INT NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
   currency CHAR(3) NOT NULL DEFAULT 'EUR',
   message TEXT NULL,
   status ENUM('pending','accepted','rejected','countered','expired','withdrawn') NOT NULL DEFAULT 'pending',
-  counter_offer_id BIGINT UNSIGNED NULL,
+  counter_offer_id INT NULL,
   expires_at TIMESTAMP NULL,
-  created_by BIGINT UNSIGNED NULL,
-  updated_by BIGINT UNSIGNED NULL,
+  created_by INT NULL,
+  updated_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_offers_property_id (property_id),
@@ -39,4 +39,3 @@ CREATE TABLE IF NOT EXISTS offers (
     FOREIGN KEY (updated_by) REFERENCES users(id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

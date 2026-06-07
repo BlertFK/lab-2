@@ -5,6 +5,7 @@ export default function MyProperties({ setPage, setEditTarget, showToast }) {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const loadProperties = async () => {
     setLoading(true);
@@ -37,6 +38,10 @@ export default function MyProperties({ setPage, setEditTarget, showToast }) {
   };
 
   const statusColor = { available: "#059669", sold: "#dc2626", rented: "#d97706" };
+  const statusOptions = ["all", "available", "sold", "rented"];
+  const filteredProperties = statusFilter === "all"
+    ? properties
+    : properties.filter((property) => property.status === statusFilter);
 
   return (
     <div className="dashboard">
@@ -54,6 +59,18 @@ export default function MyProperties({ setPage, setEditTarget, showToast }) {
       </div>
 
       <div className="dash-body">
+        <div className="buyer-subnav" style={{ marginBottom: "1.5rem", maxWidth: 520 }}>
+          {statusOptions.map((status) => (
+            <button
+              key={status}
+              className={`buyer-subnav-btn ${statusFilter === status ? "active" : ""}`}
+              onClick={() => setStatusFilter(status)}
+            >
+              {status === "all" ? "All" : status}
+            </button>
+          ))}
+        </div>
+
         {loading && <p className="loading-text">⏳ Loading your properties...</p>}
         {error && <div className="alert alert-error">⚠️ {error}</div>}
         {!loading && !error && properties.length === 0 && (
@@ -65,9 +82,16 @@ export default function MyProperties({ setPage, setEditTarget, showToast }) {
           </div>
         )}
 
-        {properties.length > 0 && (
+        {!loading && !error && properties.length > 0 && filteredProperties.length === 0 && (
+          <div className="profile-card" style={{ textAlign: "center", padding: "2rem" }}>
+            <p style={{ fontWeight: 600, marginBottom: "0.5rem" }}>No {statusFilter} properties</p>
+            <p style={{ color: "var(--text-muted)" }}>Choose another status filter to keep browsing.</p>
+          </div>
+        )}
+
+        {filteredProperties.length > 0 && (
           <div className="seller-grid">
-            {properties.map(p => (
+            {filteredProperties.map(p => (
               <div key={p.id} className="seller-prop-card">
                 <div className="seller-prop-img">
                   {p.image_url

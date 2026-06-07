@@ -1,0 +1,812 @@
+{
+  "info": {
+    "name": "RealEstate Fadil Endpoints",
+    "_postman_id": "8c0f0f4a-fadil-f41-f42-collection",
+    "description": "Postman collection for Fadil F41-F42 domain endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "propertyId",
+      "value": "1"
+    },
+    {
+      "key": "amenityId",
+      "value": "1"
+    },
+    {
+      "key": "imageId",
+      "value": "1"
+    },
+    {
+      "key": "viewingId",
+      "value": "1"
+    },
+    {
+      "key": "offerId",
+      "value": "1"
+    },
+    {
+      "key": "transactionId",
+      "value": "1"
+    },
+    {
+      "key": "reviewId",
+      "value": "1"
+    },
+    {
+      "key": "agencyId",
+      "value": "1"
+    },
+    {
+      "key": "agentId",
+      "value": "1"
+    },
+    {
+      "key": "threadId",
+      "value": "1"
+    },
+    {
+      "key": "messageId",
+      "value": "1"
+    },
+    {
+      "key": "planId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "List properties",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties?status=available&search=&type=&minPrice=&maxPrice="
+          }
+        },
+        {
+          "name": "Get my seller properties",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/my"
+          }
+        },
+        {
+          "name": "Get property",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{propertyId}}"
+          }
+        },
+        {
+          "name": "Create property",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Demo Listing\",\n  \"description\": \"Created from Postman.\",\n  \"price\": 120000,\n  \"location\": \"Pristina\",\n  \"type\": \"Apartment\",\n  \"status\": \"available\",\n  \"image_url\": \"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80\"\n}"
+            },
+            "url": "{{baseUrl}}/properties"
+          }
+        },
+        {
+          "name": "Update property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Demo Listing\",\n  \"description\": \"Updated from Postman.\",\n  \"price\": 130000,\n  \"location\": \"Pristina\",\n  \"type\": \"Apartment\",\n  \"status\": \"available\",\n  \"image_url\": \"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80\"\n}"
+            },
+            "url": "{{baseUrl}}/properties/{{propertyId}}"
+          }
+        },
+        {
+          "name": "Delete property",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/properties/{{propertyId}}"
+          }
+        },
+        {
+          "name": "List property images",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/images"
+          }
+        },
+        {
+          "name": "Attach property image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image_url\": \"https://images.unsplash.com/photo-1560184897-ae75f418493e?w=1200&q=80\",\n  \"sort_order\": 1,\n  \"is_primary\": false,\n  \"caption\": \"Interior view\"\n}"
+            },
+            "url": "{{baseUrl}}/properties/{{propertyId}}/images"
+          }
+        },
+        {
+          "name": "Set primary image",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/images/{{imageId}}/primary"
+          }
+        },
+        {
+          "name": "Detach property image",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/images/{{imageId}}"
+          }
+        },
+        {
+          "name": "List property amenities",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/amenities"
+          }
+        },
+        {
+          "name": "Attach amenity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amenity_id\": {{amenityId}}\n}"
+            },
+            "url": "{{baseUrl}}/properties/{{propertyId}}/amenities"
+          }
+        },
+        {
+          "name": "Detach amenity",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/amenities/{{amenityId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lookups",
+      "item": [
+        {
+          "name": "List property types",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/property-types"
+          }
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/categories"
+          }
+        },
+        {
+          "name": "List cities",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cities"
+          }
+        },
+        {
+          "name": "List amenities",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/amenities"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "List favorites",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/favorites"
+          }
+        },
+        {
+          "name": "Add favorite",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/favorites/{{propertyId}}"
+          }
+        },
+        {
+          "name": "Remove favorite",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/favorites/{{propertyId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Viewings",
+      "item": [
+        {
+          "name": "List viewings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/viewings"
+          }
+        },
+        {
+          "name": "Get viewing",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/viewings/{{viewingId}}"
+          }
+        },
+        {
+          "name": "Request viewing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": {{propertyId}},\n  \"scheduled_at\": \"2026-06-15T10:00:00.000Z\",\n  \"duration_minutes\": 30,\n  \"notes\": \"Morning preferred.\"\n}"
+            },
+            "url": "{{baseUrl}}/viewings"
+          }
+        },
+        {
+          "name": "Update viewing status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": "{{baseUrl}}/viewings/{{viewingId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "List offers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/offers"
+          }
+        },
+        {
+          "name": "Get offer",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/offers/{{offerId}}"
+          }
+        },
+        {
+          "name": "Create offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": {{propertyId}},\n  \"amount\": 110000,\n  \"currency\": \"EUR\",\n  \"message\": \"Interested in this property.\",\n  \"expires_at\": \"2026-07-01T00:00:00.000Z\"\n}"
+            },
+            "url": "{{baseUrl}}/offers"
+          }
+        },
+        {
+          "name": "Create counter-offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 118000,\n  \"currency\": \"EUR\",\n  \"message\": \"Seller counter-offer.\"\n}"
+            },
+            "url": "{{baseUrl}}/offers/{{offerId}}/counter"
+          }
+        },
+        {
+          "name": "Update offer status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": "{{baseUrl}}/offers/{{offerId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transactions"
+          }
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transactions/{{transactionId}}"
+          }
+        },
+        {
+          "name": "Update transaction status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"payment_method\": \"bank_transfer\"\n}"
+            },
+            "url": "{{baseUrl}}/transactions/{{transactionId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "List property reviews",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reviews/property/{{propertyId}}"
+          }
+        },
+        {
+          "name": "Create review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": {{propertyId}},\n  \"rating\": 5,\n  \"title\": \"Great property\",\n  \"comment\": \"Smooth purchase and good location.\"\n}"
+            },
+            "url": "{{baseUrl}}/reviews"
+          }
+        },
+        {
+          "name": "Hide review",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/reviews/{{reviewId}}/hide"
+          }
+        },
+        {
+          "name": "Unhide review",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/reviews/{{reviewId}}/unhide"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agencies",
+      "item": [
+        {
+          "name": "List agencies",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agencies"
+          }
+        },
+        {
+          "name": "Get agency",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agencies/{{agencyId}}"
+          }
+        },
+        {
+          "name": "Get agency agents",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agencies/{{agencyId}}/agents"
+          }
+        },
+        {
+          "name": "Create agency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Realty\",\n  \"email\": \"postman-realty@example.com\",\n  \"license_number\": \"XK-POSTMAN-001\",\n  \"phone\": \"+38344123456\",\n  \"city\": \"Pristina\",\n  \"country\": \"Kosovo\"\n}"
+            },
+            "url": "{{baseUrl}}/agencies"
+          }
+        },
+        {
+          "name": "Update agency",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+38344123457\",\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/agencies/{{agencyId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agents",
+      "item": [
+        {
+          "name": "List agents",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agents"
+          }
+        },
+        {
+          "name": "Get agent",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/agents/{{agentId}}"
+          }
+        },
+        {
+          "name": "Create agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 3,\n  \"agency_id\": {{agencyId}},\n  \"license_number\": \"XK-POSTMAN-AGENT-001\",\n  \"specialization\": \"Apartments\",\n  \"phone\": \"+38344111111\",\n  \"commission_rate\": 5\n}"
+            },
+            "url": "{{baseUrl}}/agents"
+          }
+        },
+        {
+          "name": "Update agent",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialization\": \"Luxury\",\n  \"commission_rate\": 5.5\n}"
+            },
+            "url": "{{baseUrl}}/agents/{{agentId}}"
+          }
+        },
+        {
+          "name": "Update agent status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/agents/{{agentId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Send legacy inquiry message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": {{propertyId}},\n  \"message\": \"Is this property still available?\"\n}"
+            },
+            "url": "{{baseUrl}}/messages"
+          }
+        },
+        {
+          "name": "Seller legacy messages",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/messages/seller"
+          }
+        },
+        {
+          "name": "Mark message read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/messages/{{messageId}}/read"
+          }
+        },
+        {
+          "name": "List threads",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/threads"
+          }
+        },
+        {
+          "name": "Create thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": {{propertyId}},\n  \"seller_id\": 3\n}"
+            },
+            "url": "{{baseUrl}}/threads"
+          }
+        },
+        {
+          "name": "List thread messages",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/threads/{{threadId}}/messages"
+          }
+        },
+        {
+          "name": "Send thread message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Hello from Postman.\"\n}"
+            },
+            "url": "{{baseUrl}}/threads/{{threadId}}/messages"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plans",
+      "item": [
+        {
+          "name": "List plans",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/plans"
+          }
+        },
+        {
+          "name": "Get my subscription",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/plans/subscription/me"
+          }
+        },
+        {
+          "name": "Subscribe to plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": {{planId}},\n  \"auto_renew\": false\n}"
+            },
+            "url": "{{baseUrl}}/plans/subscribe"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Current subscription",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/plans/subscription/me"
+          }
+        },
+        {
+          "name": "Active subscriptions report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/active-subscriptions?as_of_date=2026-06-08"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Sales by period",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/sales?date_from=2026-01-01&date_to=2026-06-08&group_by=month"
+          }
+        },
+        {
+          "name": "Listings by status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/listings?date_from=2026-01-01&date_to=2026-06-08"
+          }
+        },
+        {
+          "name": "Top properties",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/top-properties?date_from=2026-01-01&date_to=2026-06-08&limit=20"
+          }
+        },
+        {
+          "name": "Revenue by agent",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/revenue-by-agent?date_from=2026-01-01&date_to=2026-06-08"
+          }
+        },
+        {
+          "name": "Pending offers aging",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/pending-offers-aging?as_of_date=2026-06-08&min_age_days=0"
+          }
+        },
+        {
+          "name": "Active subscriptions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/active-subscriptions?as_of_date=2026-06-08"
+          }
+        },
+        {
+          "name": "Export sales CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/sales/export?date_from=2026-01-01&date_to=2026-06-08&group_by=month&format=csv"
+          }
+        },
+        {
+          "name": "Export listings Excel",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/listings/export?date_from=2026-01-01&date_to=2026-06-08&format=excel"
+          }
+        },
+        {
+          "name": "Export top properties PDF",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/top-properties/export?date_from=2026-01-01&date_to=2026-06-08&limit=20&format=pdf"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,6 +19,8 @@ const propertyAmenityRoutes = require("./routes/propertyAmenityRoutes");
 const propertyImageRoutes = require("./routes/propertyImageRoutes");
 const agencyRoutes = require("./routes/agencyRoutes");
 const agentRoutes = require("./routes/agentRoutes");
+const planRoutes = require("./routes/planRoutes");
+const lookupRoutes = require("./routes/lookupRoutes");
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/agencies", agencyRoutes);
 app.use("/api/agents", agentRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api", lookupRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "RealEstate API is running." });
@@ -65,6 +69,11 @@ app.get("/api", (req, res) => {
       "/api/reviews",
       "/api/agencies",
       "/api/agents",
+      "/api/plans",
+      "/api/property-types",
+      "/api/categories",
+      "/api/cities",
+      "/api/amenities",
     ],
   });
 });

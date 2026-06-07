@@ -1,19 +1,19 @@
 USE realestate_db;
 
 CREATE TABLE IF NOT EXISTS transactions (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  offer_id BIGINT UNSIGNED NULL,
-  property_id BIGINT UNSIGNED NOT NULL,
-  buyer_id BIGINT UNSIGNED NOT NULL,
-  seller_id BIGINT UNSIGNED NOT NULL,
-  agent_id BIGINT UNSIGNED NULL,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  offer_id INT NULL,
+  property_id INT NOT NULL,
+  buyer_id INT NOT NULL,
+  seller_id INT NOT NULL,
+  agent_id INT NULL,
   amount DECIMAL(12,2) NOT NULL,
   commission_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   status ENUM('pending','in_progress','completed','cancelled','refunded') NOT NULL DEFAULT 'pending',
   payment_method ENUM('cash','bank_transfer','escrow','crypto') NULL,
   completed_at TIMESTAMP NULL,
-  created_by BIGINT UNSIGNED NULL,
-  updated_by BIGINT UNSIGNED NULL,
+  created_by INT NULL,
+  updated_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_transactions_offer_id (offer_id),
@@ -41,4 +41,3 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (updated_by) REFERENCES users(id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

@@ -1,18 +1,18 @@
 USE realestate_db;
 
 CREATE TABLE IF NOT EXISTS viewings (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  property_id BIGINT UNSIGNED NOT NULL,
-  buyer_id BIGINT UNSIGNED NOT NULL,
-  seller_id BIGINT UNSIGNED NOT NULL,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  property_id INT NOT NULL,
+  buyer_id INT NOT NULL,
+  seller_id INT NOT NULL,
   scheduled_at DATETIME NOT NULL,
   duration_minutes TINYINT UNSIGNED NOT NULL DEFAULT 30,
   status ENUM('requested','confirmed','rejected','completed','cancelled') NOT NULL DEFAULT 'requested',
   notes TEXT NULL,
-  cancelled_by BIGINT UNSIGNED NULL,
+  cancelled_by INT NULL,
   cancelled_reason VARCHAR(255) NULL,
-  created_by BIGINT UNSIGNED NULL,
-  updated_by BIGINT UNSIGNED NULL,
+  created_by INT NULL,
+  updated_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_viewings_property_id (property_id),
@@ -39,4 +39,3 @@ CREATE TABLE IF NOT EXISTS viewings (
     FOREIGN KEY (updated_by) REFERENCES users(id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-

@@ -1,10 +1,10 @@
 USE realestate_db;
 
 CREATE TABLE IF NOT EXISTS reviews (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  property_id BIGINT UNSIGNED NOT NULL,
-  user_id BIGINT UNSIGNED NOT NULL,
-  transaction_id BIGINT UNSIGNED NULL,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  property_id INT NOT NULL,
+  user_id INT NOT NULL,
+  transaction_id INT NULL,
   rating TINYINT UNSIGNED NOT NULL,
   title VARCHAR(150) NULL,
   comment TEXT NOT NULL,
@@ -27,4 +27,3 @@ CREATE TABLE IF NOT EXISTS reviews (
     FOREIGN KEY (transaction_id) REFERENCES transactions(id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
