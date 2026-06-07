@@ -18,7 +18,7 @@ export default function PropertyDetails({ property, setPage, user }) {
   useEffect(() => {
     if (property?.id) {
       setLoading(true);
-      fetch(`http://localhost:5000/api/properties/${property.id}`)
+      fetch(`http://localhost:5001/api/properties/${property.id}`)
         .then((r) => r.json())
         .then((data) => { setDetails(data.property); setLoading(false); })
         .catch(() => setLoading(false));

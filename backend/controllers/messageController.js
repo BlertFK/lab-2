@@ -1,4 +1,13 @@
 const db = require("../config/db");
+const threadService = require("../services/threadService");
+const messageService = require("../services/messageService");
+
+const handleError = (res, error) => {
+  console.error("Message error:", error.message);
+  res.status(error.statusCode || 500).json({
+    message: error.statusCode ? error.message : "Server error. Please try again.",
+  });
+};
 
 const sendMessage = async (req, res) => {
   if (req.user.role !== "buyer") {
@@ -28,12 +37,24 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "You cannot message yourself." });
     }
 
-    const [result] = await db.query(
-      "INSERT INTO messages (buyer_id, seller_id, property_id, message) VALUES (?, ?, ?, ?)",
-      [buyer_id, seller_id, property_id, message.trim()]
+    const thread = await threadService.createOrGetThread(
+      {
+        seller_id,
+        property_id,
+      },
+      req.user
     );
 
-    res.status(201).json({ message: "Message sent successfully.", messageId: result.insertId });
+    const sentMessage = await messageService.sendThreadMessage(
+      thread.id,
+      {
+        body: message,
+        attachment_file_id: null,
+      },
+      req.user
+    );
+
+    res.status(201).json({ message: "Message sent successfully.", messageId: sentMessage.id, threadId: thread.id });
   } catch (error) {
     console.error("sendMessage error:", error.message);
     res.status(500).json({ message: "Server error. Please try again." });
@@ -49,9 +70,12 @@ const getSellerMessages = async (req, res) => {
     const [rows] = await db.query(
       `SELECT
         m.id,
-        m.message,
+        COALESCE(m.message, m.body) AS message,
         m.created_at,
         m.property_id,
+        m.thread_id,
+        m.sender_id,
+        m.read_at,
         p.title AS property_title,
         u.name  AS buyer_name,
         u.email AS buyer_email
@@ -70,4 +94,13 @@ const getSellerMessages = async (req, res) => {
   }
 };
 
-module.exports = { sendMessage, getSellerMessages };
+const markMessageRead = async (req, res) => {
+  try {
+    const message = await messageService.markMessageRead(req.params.id, req.user);
+    res.status(200).json({ message: "Message marked as read.", data: message });
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+module.exports = { sendMessage, getSellerMessages, markMessageRead };

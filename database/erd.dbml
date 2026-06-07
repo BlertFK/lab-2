@@ -1,0 +1,506 @@
+Project realestate_platform {
+  database_type: "MySQL"
+  note: "RealEstate Platform ERD for F01-F03. Includes the full 34-table specification; migrations 001-006 implement F02-F03."
+}
+
+Table users {
+  id bigint [pk, increment]
+  first_name varchar(60)
+  last_name varchar(60)
+  email varchar(150) [unique]
+  password_hash varchar(255)
+  phone varchar(30)
+  avatar_file_id bigint [null]
+  is_active boolean
+  email_verified_at timestamp [null]
+  last_login_at timestamp [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar(50) [unique]
+  description varchar(255)
+  is_system boolean
+  created_at timestamp
+}
+
+Table user_roles {
+  id bigint [pk, increment]
+  user_id bigint
+  role_id bigint
+  assigned_at timestamp
+  assigned_by bigint [null]
+
+  indexes {
+    (user_id, role_id) [unique]
+  }
+}
+
+Table permissions {
+  id bigint [pk, increment]
+  name varchar(80) [unique]
+  description varchar(255)
+  resource varchar(50)
+}
+
+Table role_permissions {
+  id bigint [pk, increment]
+  role_id bigint
+  permission_id bigint
+
+  indexes {
+    (role_id, permission_id) [unique]
+  }
+}
+
+Table refresh_tokens {
+  id bigint [pk, increment]
+  user_id bigint
+  token_hash varchar(255) [unique]
+  user_agent varchar(255)
+  ip_address varchar(45)
+  expires_at timestamp
+  revoked_at timestamp [null]
+  replaced_by bigint [null]
+  created_at timestamp
+}
+
+Table audit_logs {
+  id bigint [pk, increment]
+  user_id bigint [null]
+  action varchar(50)
+  entity varchar(50)
+  entity_id bigint [null]
+  old_value json [null]
+  new_value json [null]
+  ip_address varchar(45)
+  user_agent varchar(255)
+  created_at timestamp
+}
+
+Table notifications {
+  id bigint [pk, increment]
+  user_id bigint
+  type varchar(50)
+  title varchar(150)
+  message text
+  link varchar(255)
+  is_read boolean
+  created_at timestamp
+}
+
+Table settings {
+  id bigint [pk, increment]
+  key varchar(80) [unique]
+  value text
+  type varchar(20)
+  description varchar(255)
+  updated_at timestamp
+  updated_by bigint [null]
+}
+
+Table files {
+  id bigint [pk, increment]
+  entity varchar(50)
+  entity_id bigint [null]
+  filename varchar(255)
+  original_name varchar(255)
+  mime_type varchar(100)
+  file_path varchar(500)
+  file_size bigint
+  width int [null]
+  height int [null]
+  uploaded_by bigint
+  created_at timestamp
+}
+
+Table property_types {
+  id bigint [pk, increment]
+  name varchar(50) [unique]
+  slug varchar(70) [unique]
+  icon varchar(80)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar(50) [unique]
+  slug varchar(70) [unique]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cities {
+  id bigint [pk, increment]
+  name varchar(100)
+  region varchar(100)
+  country char(2)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table amenities {
+  id bigint [pk, increment]
+  name varchar(80) [unique]
+  icon varchar(80)
+  category varchar(20)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table locations {
+  id bigint [pk, increment]
+  city_id bigint
+  district varchar(100)
+  address_line varchar(255)
+  postal_code varchar(20)
+  latitude decimal(10,7)
+  longitude decimal(10,7)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table properties {
+  id bigint [pk, increment]
+  title varchar(200)
+  slug varchar(220) [unique]
+  description text
+  price decimal(12,2)
+  currency char(3)
+  area_m2 decimal(8,2)
+  rooms tinyint
+  bedrooms tinyint
+  bathrooms tinyint
+  floor tinyint
+  total_floors tinyint
+  year_built smallint
+  type_id bigint
+  category_id bigint
+  location_id bigint
+  status varchar(20)
+  seller_id bigint
+  agent_id bigint [null]
+  agency_id bigint [null]
+  views_count int
+  featured_until timestamp [null]
+  published_at timestamp [null]
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (title, description) [name: "ft_properties_title_description"]
+  }
+}
+
+Table property_amenities {
+  id bigint [pk, increment]
+  property_id bigint
+  amenity_id bigint
+
+  indexes {
+    (property_id, amenity_id) [unique]
+  }
+}
+
+Table property_images {
+  id bigint [pk, increment]
+  property_id bigint
+  file_id bigint
+  sort_order tinyint
+  is_primary boolean
+  caption varchar(150)
+}
+
+Table favorites {
+  id bigint [pk, increment]
+  user_id bigint
+  property_id bigint
+  created_at timestamp
+
+  indexes {
+    (user_id, property_id) [unique]
+  }
+}
+
+Table viewings {
+  id bigint [pk, increment]
+  property_id bigint
+  buyer_id bigint
+  seller_id bigint
+  scheduled_at datetime
+  duration_minutes tinyint
+  status varchar(20)
+  notes text
+  cancelled_by bigint [null]
+  cancelled_reason varchar(255)
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table offers {
+  id bigint [pk, increment]
+  property_id bigint
+  buyer_id bigint
+  seller_id bigint
+  amount decimal(12,2)
+  currency char(3)
+  message text
+  status varchar(20)
+  counter_offer_id bigint [null]
+  expires_at timestamp [null]
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table transactions {
+  id bigint [pk, increment]
+  offer_id bigint [null]
+  property_id bigint
+  buyer_id bigint
+  seller_id bigint
+  agent_id bigint [null]
+  amount decimal(12,2)
+  commission_amount decimal(12,2)
+  status varchar(20)
+  payment_method varchar(30)
+  completed_at timestamp [null]
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table reviews {
+  id bigint [pk, increment]
+  property_id bigint
+  user_id bigint
+  transaction_id bigint [null]
+  rating tinyint
+  title varchar(150)
+  comment text
+  is_verified boolean
+  is_hidden boolean
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (user_id, property_id) [unique]
+  }
+}
+
+Table agencies {
+  id bigint [pk, increment]
+  name varchar(150) [unique]
+  registration_no varchar(50)
+  tax_number varchar(50)
+  address varchar(255)
+  phone varchar(30)
+  email varchar(150)
+  website varchar(150)
+  logo_file_id bigint [null]
+  owner_user_id bigint
+  is_active boolean
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table agents {
+  id bigint [pk, increment]
+  user_id bigint [unique]
+  agency_id bigint
+  license_number varchar(50) [unique]
+  license_expires_at date
+  bio text
+  rating decimal(3,2)
+  total_sales int
+  is_active boolean
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table message_threads {
+  id bigint [pk, increment]
+  property_id bigint [null]
+  buyer_id bigint
+  seller_id bigint
+  last_message_at timestamp
+  buyer_unread_count int
+  seller_unread_count int
+  is_archived boolean
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (property_id, buyer_id, seller_id) [unique]
+  }
+}
+
+Table messages {
+  id bigint [pk, increment]
+  thread_id bigint
+  sender_id bigint
+  body text
+  attachment_file_id bigint [null]
+  is_edited boolean
+  edited_at timestamp [null]
+  read_at timestamp [null]
+  created_at timestamp
+}
+
+Table plans {
+  id bigint [pk, increment]
+  name varchar(50) [unique]
+  slug varchar(70) [unique]
+  price decimal(8,2)
+  duration_days smallint
+  max_listings smallint
+  max_featured smallint
+  features json
+  is_active boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table subscriptions {
+  id bigint [pk, increment]
+  user_id bigint [unique]
+  plan_id bigint
+  started_at timestamp
+  expires_at timestamp
+  status varchar(20)
+  auto_renew boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table payments {
+  id bigint [pk, increment]
+  subscription_id bigint
+  user_id bigint
+  amount decimal(8,2)
+  currency char(3)
+  provider varchar(40)
+  provider_payment_id varchar(120)
+  status varchar(20)
+  paid_at timestamp [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cms_pages {
+  id bigint [pk, increment]
+  slug varchar(120) [unique]
+  title varchar(150)
+  status varchar(20)
+  published_at timestamp [null]
+  created_by bigint
+  updated_by bigint
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cms_sections {
+  id bigint [pk, increment]
+  page_id bigint
+  name varchar(100)
+  sort_order int
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cms_blocks {
+  id bigint [pk, increment]
+  section_id bigint
+  type varchar(40)
+  content json
+  sort_order int
+  is_visible boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cms_block_versions {
+  id bigint [pk, increment]
+  block_id bigint
+  content json
+  version_no int
+  created_by bigint
+  created_at timestamp
+}
+
+Ref: users.avatar_file_id > files.id
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+Ref: user_roles.assigned_by > users.id
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_id > permissions.id
+Ref: refresh_tokens.user_id > users.id
+Ref: refresh_tokens.replaced_by > refresh_tokens.id
+Ref: audit_logs.user_id > users.id
+Ref: notifications.user_id > users.id
+Ref: settings.updated_by > users.id
+Ref: files.uploaded_by > users.id
+Ref: locations.city_id > cities.id
+Ref: properties.type_id > property_types.id
+Ref: properties.category_id > categories.id
+Ref: properties.location_id > locations.id
+Ref: properties.seller_id > users.id
+Ref: properties.agent_id > agents.id
+Ref: properties.agency_id > agencies.id
+Ref: properties.created_by > users.id
+Ref: properties.updated_by > users.id
+Ref: property_amenities.property_id > properties.id
+Ref: property_amenities.amenity_id > amenities.id
+Ref: property_images.property_id > properties.id
+Ref: property_images.file_id > files.id
+Ref: favorites.user_id > users.id
+Ref: favorites.property_id > properties.id
+Ref: viewings.property_id > properties.id
+Ref: viewings.buyer_id > users.id
+Ref: viewings.seller_id > users.id
+Ref: viewings.cancelled_by > users.id
+Ref: offers.property_id > properties.id
+Ref: offers.buyer_id > users.id
+Ref: offers.seller_id > users.id
+Ref: offers.counter_offer_id > offers.id
+Ref: transactions.offer_id > offers.id
+Ref: transactions.property_id > properties.id
+Ref: transactions.buyer_id > users.id
+Ref: transactions.seller_id > users.id
+Ref: transactions.agent_id > agents.id
+Ref: reviews.property_id > properties.id
+Ref: reviews.user_id > users.id
+Ref: reviews.transaction_id > transactions.id
+Ref: agencies.logo_file_id > files.id
+Ref: agencies.owner_user_id > users.id
+Ref: agents.user_id > users.id
+Ref: agents.agency_id > agencies.id
+Ref: message_threads.property_id > properties.id
+Ref: message_threads.buyer_id > users.id
+Ref: message_threads.seller_id > users.id
+Ref: messages.thread_id > message_threads.id
+Ref: messages.sender_id > users.id
+Ref: messages.attachment_file_id > files.id
+Ref: subscriptions.user_id > users.id
+Ref: subscriptions.plan_id > plans.id
+Ref: payments.subscription_id > subscriptions.id
+Ref: payments.user_id > users.id
+Ref: cms_pages.created_by > users.id
+Ref: cms_pages.updated_by > users.id
+Ref: cms_sections.page_id > cms_pages.id
+Ref: cms_blocks.section_id > cms_sections.id
+Ref: cms_block_versions.block_id > cms_blocks.id
+Ref: cms_block_versions.created_by > users.id

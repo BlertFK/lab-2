@@ -9,6 +9,16 @@ const adminRoutes = require("./routes/adminRoutes");
 const buyerRoutes = require("./routes/buyerRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const threadRoutes = require("./routes/threadRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+const viewingRoutes = require("./routes/viewingRoutes");
+const offerRoutes = require("./routes/offerRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const propertyAmenityRoutes = require("./routes/propertyAmenityRoutes");
+const propertyImageRoutes = require("./routes/propertyImageRoutes");
+const agencyRoutes = require("./routes/agencyRoutes");
+const agentRoutes = require("./routes/agentRoutes");
 
 const app = express();
 
@@ -18,13 +28,45 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
+app.use("/api/properties", propertyAmenityRoutes);
+app.use("/api/properties", propertyImageRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/buyer", buyerRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/threads", threadRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/viewings", viewingRoutes);
+app.use("/api/offers", offerRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/agencies", agencyRoutes);
+app.use("/api/agents", agentRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "RealEstate API is running." });
+});
+
+app.get("/api", (req, res) => {
+  res.json({
+    message: "RealEstate API is running.",
+    endpoints: [
+      "/api/auth",
+      "/api/properties",
+      "/api/admin",
+      "/api/buyer",
+      "/api/favorites",
+      "/api/messages",
+      "/api/threads",
+      "/api/reports",
+      "/api/viewings",
+      "/api/offers",
+      "/api/transactions",
+      "/api/reviews",
+      "/api/agencies",
+      "/api/agents",
+    ],
+  });
 });
 
 app.use((req, res) => {

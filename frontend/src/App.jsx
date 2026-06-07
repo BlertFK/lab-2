@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PropertiesPage from "./pages/PropertiesPage";
 import PropertyDetails from "./pages/PropertyDetails";
+import ReportBuilderPage from "./pages/reports/ReportBuilderPage";
 
 const getPageFromPath = (pathname) => {
   if (pathname === "/login") return "login";
@@ -22,6 +23,7 @@ const getPageFromPath = (pathname) => {
   if (pathname === "/dashboard") return "dashboard";
   if (pathname === "/properties") return "properties";
   if (pathname === "/property-details") return "propertyDetails";
+  if (pathname === "/reports") return "reports";
   return "home";
 };
 
@@ -32,6 +34,7 @@ const getPathFromPage = (page) => {
   if (page === "dashboard") return "/dashboard";
   if (page === "properties") return "/properties";
   if (page === "propertyDetails") return "/property-details";
+  if (page === "reports") return "/reports";
   return "/";
 };
 
@@ -123,7 +126,9 @@ export default function App() {
 
         setUser(restoredUser);
         localStorage.setItem("user", JSON.stringify(restoredUser));
-        setPageState(restoredUser.role === "admin" ? "admin" : "dashboard");
+        setPageState((currentPage) => (
+          currentPage === "reports" ? "reports" : restoredUser.role === "admin" ? "admin" : "dashboard"
+        ));
       } catch {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -177,11 +182,15 @@ export default function App() {
       )}
 
       {page === "admin" && user?.role === "admin" && (
-        <AdminDashboard onLogout={handleLogout} />
+        <AdminDashboard onLogout={handleLogout} setPage={setPage} />
       )}
 
       {page === "dashboard" && user && (
         <Dashboard user={user} setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+
+      {page === "reports" && (user?.role === "admin" || user?.role === "seller") && (
+        <ReportBuilderPage setPage={user?.role === "seller" ? () => setPage("dashboard") : () => setPage("admin")} />
       )}
 
       {page === "home" && (
