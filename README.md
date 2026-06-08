@@ -1,165 +1,199 @@
-# 🏠 RealEstate — Full Stack App
+# RealEstate Platform
 
-A full-stack real estate platform built with **React**, **Node.js/Express**, and **MySQL**.
+Full-stack real estate app built with React, Node.js/Express, MySQL, Socket.IO, optional MongoDB, and report exports.
 
----
+## What Is Included
 
-## 📁 Project Structure
+- Property listings with filters, images, amenities, favorites, and view tracking
+- Viewings, offers, transactions, reviews, agencies, agents, plans, subscriptions, and payments webhook
+- Messaging with Socket.IO events
+- Reports with CSV, Excel, PDF export and Recharts preview charts
+- MySQL migrations and seed data for a demo database
+- Optional MongoDB models for property view logs and archives
+- Postman collection and Swagger annotation source
 
+## Requirements
+
+- Node.js 18+
+- npm
+- MySQL 8+
+- MongoDB optional
+- VS Code optional, but recommended
+
+## Beginner MySQL Setup In VS Code
+
+This project uses MySQL, not SQLite. If you installed a VS Code extension named something like SQLite, that extension is not enough for this project.
+
+Install these tools first:
+
+1. Install Node.js LTS from `https://nodejs.org/`
+2. Install MySQL Community Server from `https://dev.mysql.com/downloads/mysql/`
+3. Install MySQL Workbench from `https://dev.mysql.com/downloads/workbench/`
+4. Install VS Code from `https://code.visualstudio.com/`
+
+During MySQL installation:
+
+- Keep the default port `3306`.
+- Create or remember the MySQL `root` password.
+- If it asks for authentication method, choose the recommended/default option.
+
+Recommended VS Code extension:
+
+- Search Extensions for `MySQL` or `SQLTools`.
+- Install `SQLTools` and the `SQLTools MySQL/MariaDB Driver`, or install another MySQL client extension.
+- Do not use a SQLite-only extension for this project.
+
+Create a MySQL connection in VS Code:
+
+```text
+Host: localhost
+Port: 3306
+User: root
+Password: your_mysql_password
+Database: realestate_db
 ```
-realestate-project/
-├── frontend/                  ← React app (Create React App)
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── index.js           ← React entry point
-│   │   └── App.jsx            ← All components + pages
-│   └── package.json
-│
-├── backend/                   ← Node.js + Express API
-│   ├── server.js              ← Express app entry point
-│   ├── .env.example           ← Copy to .env and fill in values
-│   ├── package.json
-│   ├── config/
-│   │   ├── db.js              ← MySQL connection pool
-│   │   └── schema.sql         ← Run this to create DB & table
-│   ├── routes/
-│   │   └── authRoutes.js      ← /api/auth/* route definitions
-│   ├── controllers/
-│   │   └── authController.js  ← register, login, getMe logic
-│   └── middleware/
-│       └── authMiddleware.js  ← JWT verifyToken + requireRole
-│
-└── README.md
+
+If `realestate_db` does not appear yet, run the database setup command in the next section first.
+
+Check MySQL from terminal:
+
+```bash
+mysql -u root -p
 ```
 
----
+Enter your MySQL password. If you see `mysql>`, it works. Exit with:
 
-## ⚡ Quick Start
-
-### 1. Set up MySQL Database
-
-Open MySQL and run:
 ```sql
-source backend/config/schema.sql
+exit;
 ```
 
-Or paste the contents of `schema.sql` into MySQL Workbench / phpMyAdmin.
+If the `mysql` command is not found, use MySQL Workbench to connect with the same host, port, user, and password.
 
----
+## Quick Start
 
-### 2. Configure the Backend
+From the project root:
+
+```bash
+cd "/path/to/lab-2"
+```
+
+### 1. Configure Backend
 
 ```bash
 cd backend
-
-# Copy the example env file
 cp .env.example .env
 ```
 
-Edit `.env` with your credentials:
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=realestate_db
-JWT_SECRET=change_this_to_a_long_random_string
-JWT_EXPIRES_IN=7d
+Edit `backend/.env` if your MySQL user, password, or host are different.
+
+Default backend URL:
+
+```text
+http://localhost:5001
 ```
 
-Install dependencies and start:
+### 2. Create And Seed Database
+
+Run this from the project root:
+
 ```bash
-npm install
-node server.js
-# → Server running on http://localhost:5000
+mysql -u root -p < database/run-all.sql
 ```
 
----
+If your MySQL root user has no password:
 
-### 3. Start the Frontend
+```bash
+mysql -u root < database/run-all.sql
+```
+
+This creates `realestate_db`, applies all migrations, and loads demo seed data.
+
+### 3. Start Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Health check:
+
+```text
+http://localhost:5001/api
+```
+
+### 4. Configure Frontend
 
 ```bash
 cd frontend
+cp .env.example .env
 npm install
 npm start
-# → App running on http://localhost:3000
 ```
 
----
+Frontend URL:
 
-## 🔌 API Endpoints
-
-| Method | Endpoint | Auth Required | Description |
-|--------|----------|---------------|-------------|
-| POST | `/api/auth/register` | ❌ | Register a new user |
-| POST | `/api/auth/login` | ❌ | Login, returns JWT token |
-| GET | `/api/auth/me` | ✅ Bearer token | Get current user profile |
-
-### Register example
-```json
-POST /api/auth/register
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "secret123",
-  "role": "buyer"
-}
+```text
+http://localhost:3000
 ```
 
-### Login example
-```json
-POST /api/auth/login
-{
-  "email": "jane@example.com",
-  "password": "secret123"
-}
+## Demo Accounts
+
+These are created by `database/schema.sql`:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@realestate.local` | `Admin123!` |
+| Buyer | `buyer@realestate.local` | `Buyer123!` |
+| Seller | `seller@realestate.local` | `Seller123!` |
+
+Seeded sellers and agents use the seller password hash from the demo seller account.
+
+## Optional MongoDB
+
+The app runs without MongoDB. If MongoDB is not configured, the backend logs the fallback and continues with SQL.
+
+To enable Mongo locally:
+
+```env
+MONGO_URI=mongodb://localhost:27017/realestate
+MONGO_ARCHIVE_ENABLED=true
+MONGO_ARCHIVE_CRON=0 3 * * *
 ```
 
-Response:
-```json
-{
-  "message": "Login successful.",
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": { "id": 1, "name": "Jane Doe", "email": "...", "role": "buyer" }
-}
+More details are in [NOSQL.md](./NOSQL.md).
+
+## API Testing
+
+Import this file into Postman:
+
+```text
+docs/postman-collection.json
 ```
 
----
+Set collection variables:
 
-## 🗄️ Database Schema
+- `baseUrl`: `http://localhost:5001/api`
+- `token`: JWT returned by `POST /api/auth/login`
 
-```sql
-CREATE TABLE users (
-  id         INT PRIMARY KEY AUTO_INCREMENT,
-  name       VARCHAR(100) NOT NULL,
-  email      VARCHAR(150) NOT NULL UNIQUE,
-  password   VARCHAR(255) NOT NULL,
-  role       ENUM('admin', 'buyer', 'seller') DEFAULT 'buyer',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+Swagger annotations live in:
+
+```text
+backend/docs/fadilSwaggerAnnotations.js
 ```
 
----
+## Useful Docs
 
-## 🔐 How Authentication Works
+- [DATABASE.md](./DATABASE.md)
+- [NOSQL.md](./NOSQL.md)
+- [AGENCIES_AGENTS_MODULE_SUMMARY.md](./AGENCIES_AGENTS_MODULE_SUMMARY.md)
 
-```
-Register → bcrypt hashes password → saves to MySQL
-Login    → bcrypt compares password → generates JWT
-Frontend → stores JWT in localStorage
-Dashboard → sends JWT in Authorization header → backend verifies → returns user from MySQL
-Logout   → clears localStorage
-```
+## Common Issues
 
----
+If the frontend shows failed API requests, confirm:
 
-## 🛠️ Tech Stack
+- backend is running on port `5001`
+- `frontend/.env` has `REACT_APP_API_BASE=http://localhost:5001/api`
+- MySQL has the seeded `realestate_db`
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, CSS (no external UI library) |
-| Backend | Node.js, Express.js |
-| Database | MySQL (mysql2 driver) |
-| Auth | bcryptjs (hashing) + jsonwebtoken (JWT) |
-| State | React useState / localStorage |
+If protected API calls fail, log in again and update the Postman `token` variable.
