@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const BaseRepository = require("./BaseRepository");
 
 const BASE_SELECT = `
   SELECT p.*, u.name AS seller_name, u.email AS seller_email
@@ -8,7 +9,15 @@ const BASE_SELECT = `
 
 let cachedColumns = null;
 
-const getColumns = async () => {
+class PropertyRepository extends BaseRepository {
+  constructor() {
+    super("properties", db);
+  }
+}
+
+const propertyRepository = new PropertyRepository();
+
+propertyRepository.getColumns = async () => {
   if (cachedColumns) return cachedColumns;
 
   const [rows] = await db.query(
@@ -21,7 +30,7 @@ const getColumns = async () => {
   return cachedColumns;
 };
 
-const resetColumnCache = () => {
+propertyRepository.resetColumnCache = () => {
   cachedColumns = null;
 };
 
@@ -31,8 +40,8 @@ const addFilter = (parts, params, condition, value) => {
   params.push(value);
 };
 
-const list = async (filters = {}) => {
-  const columns = await getColumns();
+propertyRepository.list = async (filters = {}) => {
+  const columns = await propertyRepository.getColumns();
   const where = ["1=1"];
   const params = [];
   const joins = [];
@@ -74,21 +83,21 @@ const list = async (filters = {}) => {
   return rows;
 };
 
-const findById = async (id) => {
+propertyRepository.findById = async (id) => {
   const [rows] = await db.query(`${BASE_SELECT} WHERE p.id = ?`, [id]);
   return rows[0] || null;
 };
 
-const findBySlug = async (slug) => {
-  const columns = await getColumns();
+propertyRepository.findBySlug = async (slug) => {
+  const columns = await propertyRepository.getColumns();
   if (!columns.has("slug")) return null;
 
   const [rows] = await db.query(`${BASE_SELECT} WHERE p.slug = ?`, [slug]);
   return rows[0] || null;
 };
 
-const slugExists = async (slug, excludeId = null) => {
-  const columns = await getColumns();
+propertyRepository.slugExists = async (slug, excludeId = null) => {
+  const columns = await propertyRepository.getColumns();
   if (!columns.has("slug")) return false;
 
   const params = [slug];
@@ -102,8 +111,8 @@ const slugExists = async (slug, excludeId = null) => {
   return rows.length > 0;
 };
 
-const create = async (property) => {
-  const columns = await getColumns();
+propertyRepository.create = async (property) => {
+  const columns = await propertyRepository.getColumns();
   const allowed = [
     "title", "slug", "description", "price", "currency", "area_m2", "rooms", "bedrooms",
     "bathrooms", "floor", "total_floors", "year_built", "type_id", "category_id",
@@ -122,8 +131,8 @@ const create = async (property) => {
   return result.insertId;
 };
 
-const update = async (id, changes) => {
-  const columns = await getColumns();
+propertyRepository.update = async (id, changes) => {
+  const columns = await propertyRepository.getColumns();
   const allowed = [
     "title", "slug", "description", "price", "currency", "area_m2", "rooms", "bedrooms",
     "bathrooms", "floor", "total_floors", "year_built", "type_id", "category_id",
@@ -146,13 +155,13 @@ const update = async (id, changes) => {
   return result.affectedRows;
 };
 
-const remove = async (id) => {
+propertyRepository.remove = async (id) => {
   const [result] = await db.query("DELETE FROM properties WHERE id = ?", [id]);
   return result.affectedRows;
 };
 
-const updateStatus = async (id, status, userId) => {
-  const columns = await getColumns();
+propertyRepository.updateStatus = async (id, status, userId) => {
+  const columns = await propertyRepository.getColumns();
   const assignments = ["status = ?"];
   const params = [status];
 
@@ -170,8 +179,8 @@ const updateStatus = async (id, status, userId) => {
   return result.affectedRows;
 };
 
-const incrementViews = async (id) => {
-  const columns = await getColumns();
+propertyRepository.incrementViews = async (id) => {
+  const columns = await propertyRepository.getColumns();
   if (!columns.has("views_count")) return 0;
 
   const [result] = await db.query(
@@ -182,16 +191,4 @@ const incrementViews = async (id) => {
   return result.affectedRows;
 };
 
-module.exports = {
-  getColumns,
-  resetColumnCache,
-  list,
-  findById,
-  findBySlug,
-  slugExists,
-  create,
-  update,
-  remove,
-  updateStatus,
-  incrementViews,
-};
+module.exports = propertyRepository;

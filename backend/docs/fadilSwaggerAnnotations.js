@@ -11,6 +11,7 @@
  *   - name: Agents
  *   - name: Messages
  *   - name: Plans
+ *   - name: Payments
  *   - name: Reports
  *   - name: Lookups
  *
@@ -75,6 +76,17 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Seller properties returned. }
+ * /api/properties/by-slug/{slug}:
+ *   get:
+ *     tags: [Properties]
+ *     summary: Get property details by slug.
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Property returned. }
  * /api/properties/{id}:
  *   get:
  *     tags: [Properties]
@@ -108,6 +120,48 @@
  *         schema: { type: integer }
  *     responses:
  *       200: { description: Property deleted. }
+ * /api/properties/{id}/status:
+ *   patch:
+ *     tags: [Properties]
+ *     summary: Update property status.
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status: { type: string, example: available }
+ *     responses:
+ *       200: { description: Property status updated. }
+ * /api/properties/{id}/similar:
+ *   get:
+ *     tags: [Properties]
+ *     summary: List similar properties.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Similar properties returned. }
+ * /api/properties/{id}/track-view:
+ *   post:
+ *     tags: [Properties]
+ *     summary: Track a property view.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: Property view tracked. }
  * /api/properties/{propertyId}/images:
  *   get:
  *     tags: [Properties]
@@ -148,6 +202,12 @@
  *       200: { description: Image detached. }
  * /api/properties/{propertyId}/images/{imageId}/primary:
  *   patch:
+ *     tags: [Properties]
+ *     summary: Mark property image as primary.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Primary image updated. }
+ *   put:
  *     tags: [Properties]
  *     summary: Mark property image as primary.
  *     security: [{ bearerAuth: [] }]
@@ -504,6 +564,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/sales/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export sales by period report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/listings:
  *   get:
  *     tags: [Reports]
@@ -511,6 +578,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/listings/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export listings by status report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/top-properties:
  *   get:
  *     tags: [Reports]
@@ -518,6 +592,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/top-properties/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export top properties by views report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/revenue-by-agent:
  *   get:
  *     tags: [Reports]
@@ -525,6 +606,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/revenue-by-agent/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export revenue by agent report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/pending-offers-aging:
  *   get:
  *     tags: [Reports]
@@ -532,6 +620,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/pending-offers-aging/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export pending offers aging report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/active-subscriptions:
  *   get:
  *     tags: [Reports]
@@ -539,6 +634,13 @@
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Report returned. }
+ * /api/reports/active-subscriptions/export:
+ *   get:
+ *     tags: [Reports]
+ *     summary: Export active subscriptions report.
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200: { description: Export file returned. }
  * /api/reports/{report}/export:
  *   get:
  *     tags: [Reports]
@@ -558,6 +660,25 @@
  *           enum: [csv, excel, pdf]
  *     responses:
  *       200: { description: Export file returned. }
+ */
+
+/**
+ * @swagger
+ * /api/payments/webhook:
+ *   post:
+ *     tags: [Payments]
+ *     summary: Stripe payment webhook.
+ *     description: Accepts Stripe webhook events and updates payment status when Stripe environment variables are configured.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200: { description: Webhook processed. }
+ *       400: { description: Invalid webhook payload or signature. }
+ *       503: { description: Stripe is not configured. }
  */
 
 module.exports = {};

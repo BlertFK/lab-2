@@ -71,6 +71,14 @@
     {
       "key": "planId",
       "value": "1"
+    },
+    {
+      "key": "propertySlug",
+      "value": "demo-listing"
+    },
+    {
+      "key": "paymentProviderId",
+      "value": "pi_demo_123"
     }
   ],
   "item": [
@@ -81,7 +89,7 @@
           "name": "List properties",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/properties?status=available&search=&type=&minPrice=&maxPrice="
+            "url": "{{baseUrl}}/properties?status=available&search=&city_id=&type_id=&category_id=&min_price=&max_price=&sort=newest"
           }
         },
         {
@@ -206,6 +214,61 @@
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/properties/{{propertyId}}/amenities/{{amenityId}}"
+          }
+        },
+        {
+          "name": "Get property by slug",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/by-slug/{{propertySlug}}"
+          }
+        },
+        {
+          "name": "Update property status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"available\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get similar properties",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/similar"
+          }
+        },
+        {
+          "name": "Track property view",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/track-view",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"postman\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set primary image with PUT",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/properties/{{propertyId}}/images/{{imageId}}/primary"
           }
         }
       ]
@@ -804,6 +867,56 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/reports/top-properties/export?date_from=2026-01-01&date_to=2026-06-08&limit=20&format=pdf"
+          }
+        },
+        {
+          "name": "Export top properties CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/top-properties/export?date_from=2026-01-01&date_to=2026-06-08&limit=20&format=csv"
+          }
+        },
+        {
+          "name": "Export revenue by agent CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/revenue-by-agent/export?date_from=2026-01-01&date_to=2026-06-08&format=csv"
+          }
+        },
+        {
+          "name": "Export pending offers aging CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/pending-offers-aging/export?as_of_date=2026-06-08&min_age_days=0&format=csv"
+          }
+        },
+        {
+          "name": "Export active subscriptions CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/active-subscriptions/export?as_of_date=2026-06-08&format=csv"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Stripe webhook",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/payments/webhook",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_demo_payment_succeeded\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"{{paymentProviderId}}\",\n      \"metadata\": {\n        \"payment_id\": \"1\"\n      }\n    }\n  }\n}"
+            }
           }
         }
       ]

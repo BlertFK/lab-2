@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const viewingRepository = require("../repositories/viewingRepository");
-const notificationService = require("./notificationService");
+const notifyService = require("./notifyService");
 const socketService = require("./socketService");
 
 const getProperty = async (propertyId) => {
@@ -57,7 +57,7 @@ const createViewing = async (body, user) => {
   const viewing = await viewingRepository.findById(id);
   const payload = { viewing };
   socketService.emitToUsers([viewing.buyer_id, viewing.seller_id], "viewing:scheduled", payload);
-  await notificationService.createNotification({
+  await notifyService.createNotification({
     user_id: viewing.seller_id,
     type: "viewing_scheduled",
     title: "New viewing scheduled",
@@ -112,7 +112,7 @@ const updateViewingStatus = async (id, body, user) => {
 
   if (body.status === "confirmed") {
     socketService.emitToUsers([updatedViewing.buyer_id, updatedViewing.seller_id], "viewing:confirmed", payload);
-    await notificationService.createNotification({
+    await notifyService.createNotification({
       user_id: updatedViewing.buyer_id,
       type: "viewing_confirmed",
       title: "Viewing confirmed",
@@ -125,7 +125,7 @@ const updateViewingStatus = async (id, body, user) => {
   if (body.status === "cancelled") {
     const recipientId = user.id === updatedViewing.buyer_id ? updatedViewing.seller_id : updatedViewing.buyer_id;
     socketService.emitToUsers([updatedViewing.buyer_id, updatedViewing.seller_id], "viewing:cancelled", payload);
-    await notificationService.createNotification({
+    await notifyService.createNotification({
       user_id: recipientId,
       type: "viewing_cancelled",
       title: "Viewing cancelled",
