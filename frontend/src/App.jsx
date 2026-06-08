@@ -18,8 +18,19 @@ import AgenciesPage from "./pages/AgenciesPage";
 import AgencyDetailPage from "./pages/AgencyDetailPage";
 import PlansPage from "./pages/PlansPage";
 import ReportBuilderPage from "./pages/reports/ReportBuilderPage";
+import CmsPagesListPage from "./pages/admin/cms/CmsPagesListPage";
+import CmsPageEditorPage from "./pages/admin/cms/CmsPageEditorPage";
+import CmsPublicPage from "./pages/public/CmsPublicPage";
+
+// Known fixed pages - anything else is treated as a potential CMS slug
+const FIXED_PAGES = new Set([
+  "home", "login", "register", "admin", "dashboard", "properties",
+  "propertyDetails", "agencies", "agencyDetail", "plans", "reports",
+  "cms", "cms-editor",
+]);
 
 const getPageFromPath = (pathname) => {
+  if (pathname === "/" || pathname === "") return "home";
   if (pathname === "/login") return "login";
   if (pathname === "/register") return "register";
   if (pathname === "/admin") return "admin";
@@ -30,10 +41,16 @@ const getPageFromPath = (pathname) => {
   if (pathname === "/agency-detail") return "agencyDetail";
   if (pathname === "/plans") return "plans";
   if (pathname === "/reports") return "reports";
+  if (pathname === "/admin/cms/editor") return "cms-editor";
+  if (pathname === "/admin/cms") return "cms";
+  // Any other path like /test or /about → treat as CMS slug
+  const slug = pathname.replace(/^\//, "");
+  if (slug) return `cms-slug:${slug}`;
   return "home";
 };
 
 const getPathFromPage = (page) => {
+  if (page === "home") return "/";
   if (page === "login") return "/login";
   if (page === "register") return "/register";
   if (page === "admin") return "/admin";
@@ -44,32 +61,26 @@ const getPathFromPage = (page) => {
   if (page === "agencyDetail") return "/agency-detail";
   if (page === "plans") return "/plans";
   if (page === "reports") return "/reports";
+  if (page === "cms") return "/admin/cms";
+  if (page === "cms-editor") return "/admin/cms/editor";
+  if (page.startsWith("cms-slug:")) return `/${page.replace("cms-slug:", "")}`;
   return "/";
 };
 
 export default function App() {
+  const [selectedCmsPageId, setSelectedCmsPageId] = useState(null);
+
   const [page, setPageState] = useState(() => {
-    const pathPage = getPageFromPath(window.location.pathname);
-    const savedUser = localStorage.getItem("user");
-    const savedToken = localStorage.getItem("token");
-    const expiresAt = Number(localStorage.getItem("authExpiresAt") || 0);
-
-    if (savedUser && savedToken && expiresAt > Date.now()) {
-      try {
-        return pathPage;
-      } catch {
-        return pathPage;
-      }
-    }
-
-    return pathPage;
+    return getPageFromPath(window.location.pathname);
   });
+
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [selectedAgency, setSelectedAgency] = useState(null);
+  const [selectedAgency, setSelectedAgency]     = useState(null);
+
   const [user, setUser] = useState(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    const expiresAt = Number(localStorage.getItem("authExpiresAt") || 0);
+    const savedToken  = localStorage.getItem("token");
+    const savedUser   = localStorage.getItem("user");
+    const expiresAt   = Number(localStorage.getItem("authExpiresAt") || 0);
 
     if (!savedToken || !savedUser || expiresAt <= Date.now()) {
       localStorage.removeItem("token");
@@ -77,7 +88,6 @@ export default function App() {
       localStorage.removeItem("authExpiresAt");
       return null;
     }
-
     try {
       return JSON.parse(savedUser);
     } catch {
@@ -89,7 +99,6 @@ export default function App() {
   });
 
   const [toast, setToast] = useState(null);
-
   const showToast = useCallback((message, type = "success") => setToast({ message, type }), []);
 
   const setPage = useCallback((pageName, params = {}) => {
@@ -113,14 +122,13 @@ export default function App() {
     const handlePopState = () => {
       setPageState(getPageFromPath(window.location.pathname));
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   useEffect(() => {
     const restoreSession = async () => {
-      const token = localStorage.getItem("token");
+      const token     = localStorage.getItem("token");
       const expiresAt = Number(localStorage.getItem("authExpiresAt") || 0);
 
       if (!token || expiresAt <= Date.now()) {
@@ -139,12 +147,16 @@ export default function App() {
           role: data.user.role,
           createdAt: data.user.created_at,
         };
-
         setUser(restoredUser);
         localStorage.setItem("user", JSON.stringify(restoredUser));
         setPageState((currentPage) => {
-          const preservedPages = ["home", "properties", "propertyDetails", "agencies", "agencyDetail", "plans", "reports"];
+          // Preserve public pages and CMS slug pages on session restore
+          const preservedPages = [
+            "home", "properties", "propertyDetails", "agencies",
+            "agencyDetail", "plans", "reports", "cms", "cms-editor",
+          ];
           if (preservedPages.includes(currentPage)) return currentPage;
+          if (currentPage.startsWith("cms-slug:")) return currentPage;
           return restoredUser.role === "admin" ? "admin" : "dashboard";
         });
       } catch {
@@ -184,7 +196,13 @@ export default function App() {
     setPageState("home");
   }, [showToast]);
 
-  const showNavbar = ["home", "properties", "propertyDetails", "agencies", "agencyDetail", "plans"].includes(page) || (!user && page === "dashboard");
+  const isCmsSlugPage = page.startsWith("cms-slug:");
+  const cmsSlug = isCmsSlugPage ? page.replace("cms-slug:", "") : null;
+
+  const showNavbar = [
+    "home", "properties", "propertyDetails", "agencies",
+    "agencyDetail", "plans",
+  ].includes(page) || isCmsSlugPage || (!user && page === "dashboard");
 
   return (
     <>
@@ -209,6 +227,31 @@ export default function App() {
 
       {page === "reports" && (user?.role === "admin" || user?.role === "seller") && (
         <ReportBuilderPage setPage={user?.role === "seller" ? () => setPage("dashboard") : () => setPage("admin")} />
+      )}
+
+      {page === "cms" && user?.role === "admin" && (
+        <CmsPagesListPage
+          setPage={setPage}
+          onSelectPage={(id) => {
+            setSelectedCmsPageId(id);
+            setPageState("cms-editor");
+          }}
+        />
+      )}
+
+      {page === "cms-editor" && user?.role === "admin" && (
+        <CmsPageEditorPage
+          pageId={selectedCmsPageId}
+          setPage={setPage}
+        />
+      )}
+
+      {/* CMS public pages — any slug like /test, /about, /contact */}
+      {isCmsSlugPage && (
+        <>
+          <CmsPublicPage slug={cmsSlug} setPage={setPage} />
+          <Footer />
+        </>
       )}
 
       {page === "home" && (
@@ -263,7 +306,3 @@ export default function App() {
     </>
   );
 }
-//cd /Users/fadilbayrami/Desktop/Lab\ 2/lab-2/backend
-//node server.js
-// cd /Users/fadilbayrami/Desktop/Lab\ 2/lab-2/frontend
-//npm start

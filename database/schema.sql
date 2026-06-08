@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS realestate_db;
 USE realestate_db;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS  users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS  properties (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   description TEXT,
@@ -24,7 +24,7 @@ CREATE TABLE properties (
   FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS  favorites (
   id INT AUTO_INCREMENT PRIMARY KEY,
   buyer_id INT,
   property_id INT,
@@ -33,7 +33,7 @@ CREATE TABLE favorites (
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
 );
 
-CREATE TABLE message_threads (
+CREATE TABLE IF NOT EXISTS  message_threads (
   id INT AUTO_INCREMENT PRIMARY KEY,
   property_id INT NULL,
   buyer_id INT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE message_threads (
   FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS  messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   thread_id INT,
   sender_id INT,

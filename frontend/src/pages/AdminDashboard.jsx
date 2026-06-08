@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:5001/api";
+const API = "http://localhost:5000/api";
 function getToken() { return localStorage.getItem("token"); }
 const getHeaders = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` });
 
@@ -205,6 +205,9 @@ export default function AdminDashboard({ onLogout, setPage }) {
                 Reports
               </button>
             )}
+            <button onClick={() => setPage("cms")} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+  CMS
+</button>
             <button onClick={onLogout} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
               Logout
             </button>

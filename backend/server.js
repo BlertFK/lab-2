@@ -1,8 +1,11 @@
 const express = require("express");
 const http = require("http");
+const path = require("path");
 const cors = require("cors");
 const { Server } = require("socket.io");
-require("dotenv").config();
+require("dotenv").config({ path: "../.env" });
+const cmsRoutes = require("./routes/cmsRoutes");
+const fileRoutes = require("./routes/fileRoutes");
 
 const db = require("./config/db");
 const { connectMongo } = require("./config/mongo");
@@ -43,6 +46,9 @@ app.use(cors());
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/cms", cmsRoutes);
+app.use("/api/files", fileRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
