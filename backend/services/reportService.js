@@ -1,4 +1,6 @@
 const db = require("../config/db");
+const { isMongoAvailable } = require("../config/mongo");
+const PropertyViewLog = require("../models/mongo/PropertyViewLog");
 
 const REPORT_TYPES = {
   SALES_BY_PERIOD: "sales_by_period",
@@ -89,6 +91,71 @@ const addSellerScope = (where, params, user, tableAlias = "p") => {
     where.push(`${tableAlias}.seller_id = ?`);
     params.push(user.id);
   }
+};
+
+const runMongoTopPropertiesByViews = async ({ dateFrom, dateTo, limit, user }) => {
+  if (!isMongoAvailable()) return null;
+
+  const from = new Date(`${dateFrom}T00:00:00.000Z`);
+  const to = new Date(`${dateTo}T23:59:59.999Z`);
+  const viewRows = await PropertyViewLog.aggregate([
+    { $match: { viewed_at: { $gte: from, $lte: to } } },
+    { $group: { _id: "$property_id", views: { $sum: 1 } } },
+    { $sort: { views: -1 } },
+    { $limit: Math.max(limit * 10, limit) },
+  ]);
+
+  if (viewRows.length === 0) {
+    return {
+      type: REPORT_TYPES.TOP_PROPERTIES_BY_VIEWS,
+      parameters: { date_from: dateFrom, date_to: dateTo, limit, source: "mongo" },
+      rows: [],
+    };
+  }
+
+  const viewMap = new Map(viewRows.map((row) => [Number(row._id), row.views]));
+  const propertyIds = viewRows.map((row) => Number(row._id)).filter(Boolean);
+  const placeholders = propertyIds.map(() => "?").join(", ");
+  const where = [`p.id IN (${placeholders})`];
+  const queryParams = [...propertyIds];
+
+  addSellerScope(where, queryParams, user, "p");
+
+  const offersJoin = await hasTable("offers") ? "LEFT JOIN offers o ON o.property_id = p.id" : "";
+  const offersCount = offersJoin ? "COUNT(DISTINCT o.id)" : "0";
+
+  const [properties] = await db.query(
+    `SELECT
+       p.id AS property_id,
+       p.title,
+       COUNT(DISTINCT f.id) AS favorites,
+       ${offersCount} AS offers_count
+     FROM properties p
+     LEFT JOIN favorites f ON f.property_id = p.id
+     ${offersJoin}
+     WHERE ${where.join(" AND ")}
+     GROUP BY p.id, p.title
+     LIMIT ?`,
+    [...queryParams, propertyIds.length]
+  );
+
+  const rows = properties
+    .map((property) => ({
+      ...property,
+      views: viewMap.get(Number(property.property_id)) || 0,
+    }))
+    .sort((a, b) => (
+      Number(b.views) - Number(a.views)
+      || Number(b.favorites) - Number(a.favorites)
+      || Number(b.offers_count) - Number(a.offers_count)
+    ))
+    .slice(0, limit);
+
+  return {
+    type: REPORT_TYPES.TOP_PROPERTIES_BY_VIEWS,
+    parameters: { date_from: dateFrom, date_to: dateTo, limit, source: "mongo" },
+    rows,
+  };
 };
 
 const runSalesByPeriod = async (params = {}, user = {}) => {
@@ -220,6 +287,10 @@ const runTopPropertiesByViews = async (params = {}, user = {}) => {
   const hasViewsCount = columns.has("views_count");
   const limit = Math.min(Math.max(Number(params.limit) || 20, 1), 100);
   const { dateFrom, dateTo } = normalizeDateRange(params);
+
+  const mongoReport = await runMongoTopPropertiesByViews({ dateFrom, dateTo, limit, user });
+  if (mongoReport) return mongoReport;
+
   const where = [];
   const queryParams = [];
 
@@ -262,7 +333,7 @@ const runTopPropertiesByViews = async (params = {}, user = {}) => {
 
   return {
     type: REPORT_TYPES.TOP_PROPERTIES_BY_VIEWS,
-    parameters: { date_from: dateFrom, date_to: dateTo, limit },
+    parameters: { date_from: dateFrom, date_to: dateTo, limit, source: viewsJoin ? "sql_property_view_logs" : "sql_properties" },
     rows,
   };
 };

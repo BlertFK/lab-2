@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { apiFetch } from "../utils/api";
+import { io } from "socket.io-client";
+import { API_BASE, apiFetch } from "../utils/api";
+
+const SOCKET_URL = API_BASE.replace(/\/api$/, "");
 
 /* ─── helpers ─────────────────────────────────────────────── */
 const formatTime = (iso) => {
@@ -128,10 +131,17 @@ export default function MessagesPage({
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
-  const [typingVisible] = useState(false); // placeholder — no socket in this build
+  const [typingUsers, setTypingUsers] = useState({});
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const socketRef = useRef(null);
+  const activeThreadRef = useRef(null);
+  const typingTimerRef = useRef(null);
+
+  useEffect(() => {
+    activeThreadRef.current = activeThread;
+  }, [activeThread]);
 
   /* ── scroll to bottom ── */
   const scrollToBottom = useCallback(() => {
@@ -158,10 +168,108 @@ export default function MessagesPage({
     loadThreads();
   }, [loadThreads]);
 
+  const reorderThread = useCallback((threadId, patch = {}) => {
+    setThreads((prev) => {
+      const index = prev.findIndex((thread) => thread.id === threadId);
+      if (index === -1) return prev;
+
+      const nextThread = { ...prev[index], ...patch };
+      const next = prev.filter((thread) => thread.id !== threadId);
+      return [nextThread, ...next];
+    });
+  }, []);
+
+  const mergeThreadUpdate = useCallback((thread) => {
+    if (!thread?.id) return;
+    setThreads((prev) => {
+      const index = prev.findIndex((item) => item.id === thread.id);
+      if (index === -1) return prev;
+
+      const merged = { ...prev[index], ...thread };
+      const next = prev.filter((item) => item.id !== thread.id);
+      return [merged, ...next];
+    });
+    setActiveThread((current) => (current?.id === thread.id ? { ...current, ...thread } : current));
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return undefined;
+
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+    socketRef.current = socket;
+
+    socket.on("connect_error", (err) => {
+      console.warn("Socket connection error:", err.message);
+    });
+
+    socket.on("message:new", ({ message, thread }) => {
+      if (!message?.id) return;
+      if (message.sender_id === user.id) return;
+
+      const currentThread = activeThreadRef.current;
+      const isActiveThread = currentThread?.id === message.thread_id;
+
+      if (isActiveThread) {
+        setMessages((prev) => (
+          prev.some((item) => item.id === message.id) ? prev : [...prev, message]
+        ));
+        apiFetch(`/messages/${message.id}/read`, { method: "PATCH" }).catch(() => {});
+      }
+
+      const lastMessagePatch = {
+        ...(thread || {}),
+        last_message_body: message.body,
+        last_message_at: message.created_at,
+        unread_count: isActiveThread ? 0 : undefined,
+      };
+      if (!isActiveThread) delete lastMessagePatch.unread_count;
+      reorderThread(message.thread_id, lastMessagePatch);
+    });
+
+    socket.on("message:read", ({ message }) => {
+      if (!message?.id) return;
+      setMessages((prev) => prev.map((item) => (
+        item.id === message.id ? { ...item, read_at: message.read_at } : item
+      )));
+    });
+
+    socket.on("thread:updated", ({ thread }) => {
+      mergeThreadUpdate(thread);
+    });
+
+    socket.on("thread:typing", ({ thread_id, user_id, user_name, is_typing }) => {
+      if (!thread_id || user_id === user.id) return;
+      setTypingUsers((prev) => {
+        const key = `${thread_id}:${user_id}`;
+        const next = { ...prev };
+        if (is_typing) {
+          next[key] = { thread_id, user_id, user_name };
+        } else {
+          delete next[key];
+        }
+        return next;
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [mergeThreadUpdate, reorderThread, user.id]);
+
+  useEffect(() => () => {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+  }, []);
+
   /* ── open a thread ── */
   const openThread = useCallback(
     async (thread) => {
       setActiveThread(thread);
+      socketRef.current?.emit("thread:join", { thread_id: thread.id });
       setMessages([]);
       setLoadingMessages(true);
       setInput("");
@@ -193,12 +301,39 @@ export default function MessagesPage({
     [user.id]
   );
 
+  useEffect(() => {
+    if (!activeThread?.id) return undefined;
+
+    const threadId = activeThread.id;
+    socketRef.current?.emit("thread:join", { thread_id: threadId });
+    setTypingUsers((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        if (next[key].thread_id === threadId) delete next[key];
+      });
+      return next;
+    });
+
+    return () => {
+      socketRef.current?.emit("thread:leave", { thread_id: threadId });
+    };
+  }, [activeThread?.id]);
+
+  const emitTyping = useCallback((value) => {
+    if (!activeThread?.id) return;
+    socketRef.current?.emit("thread:typing", {
+      thread_id: activeThread.id,
+      is_typing: value,
+    });
+  }, [activeThread?.id]);
+
   /* ── send message ── */
   const sendMessage = useCallback(async () => {
     const body = input.trim();
     if (!body || !activeThread || sending) return;
 
     setSending(true);
+    emitTyping(false);
     const optimistic = {
       id: `opt-${Date.now()}`,
       thread_id: activeThread.id,
@@ -221,13 +356,10 @@ export default function MessagesPage({
         prev.map((m) => (m.id === optimistic.id ? real : m))
       );
       // Update thread last message preview
-      setThreads((prev) =>
-        prev.map((t) =>
-          t.id === activeThread.id
-            ? { ...t, last_message_body: body, last_message_at: real.created_at }
-            : t
-        )
-      );
+      reorderThread(activeThread.id, {
+        last_message_body: body,
+        last_message_at: real.created_at,
+      });
     } catch (err) {
       // Revert optimistic on failure
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
@@ -236,7 +368,17 @@ export default function MessagesPage({
       setSending(false);
       inputRef.current?.focus();
     }
-  }, [input, activeThread, sending, user]);
+  }, [input, activeThread, sending, user, reorderThread, emitTyping]);
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    emitTyping(Boolean(e.target.value.trim()));
+
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      emitTyping(false);
+    }, 1200);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -260,6 +402,12 @@ export default function MessagesPage({
           { key: "profile", label: "Profile" },
           { key: "buyerMessages", label: "Messages", active: true },
         ];
+
+  const activeTypingUsers = Object.values(typingUsers).filter(
+    (item) => item.thread_id === activeThread?.id
+  );
+  const typingVisible = activeTypingUsers.length > 0;
+  const typingInitials = initials(activeTypingUsers[0]?.user_name || activeThread?.other_participant_name || "");
 
   return (
     <div className="dashboard">
@@ -401,7 +549,7 @@ export default function MessagesPage({
                   {/* Typing indicator placeholder */}
                   {typingVisible && (
                     <div className="msg-bubble-row theirs">
-                      <div className="msg-bubble-avatar">…</div>
+                      <div className="msg-bubble-avatar">{typingInitials}</div>
                       <div className="msg-bubble msg-bubble-theirs msg-typing">
                         <span /><span /><span />
                       </div>
@@ -419,8 +567,9 @@ export default function MessagesPage({
                     placeholder="Type a message… (Enter to send)"
                     value={input}
                     rows={1}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
+                    onBlur={() => emitTyping(false)}
                     disabled={sending}
                   />
                   <button

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { API_BASE, apiFetch } from "../../utils/api";
+import Chart from "../../components/Chart";
+import ExportMenu from "../../components/ExportMenu";
+import { apiFetch } from "../../utils/api";
 
 const REPORT_TYPES = [
   {
@@ -52,18 +54,6 @@ const stringifyCell = (value) => {
   return String(value);
 };
 
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
 export default function ReportBuilderPage({ setPage }) {
   const [reportType, setReportType] = useState("sales");
   const [dateFrom, setDateFrom] = useState(getDefaultDate(-90));
@@ -94,26 +84,34 @@ export default function ReportBuilderPage({ setPage }) {
     return keys;
   }, [rows]);
 
-  const chart = useMemo(() => {
+  const chartConfig = useMemo(() => {
     const firstNumericColumn = columns.find((column) =>
       rows.some((row) => Number(row[column]) > 0)
     );
     const labelColumn = columns.find((column) => column !== firstNumericColumn) || columns[0];
 
-    if (!firstNumericColumn || !labelColumn) return [];
+    if (!firstNumericColumn || !labelColumn) return null;
 
-    const values = rows.slice(0, 8).map((row) => ({
+    const data = rows.slice(0, 8).map((row) => ({
       label: stringifyCell(row[labelColumn]) || "-",
       value: Number(row[firstNumericColumn]) || 0,
     }));
-    const max = Math.max(...values.map((item) => item.value), 1);
 
-    return values.map((item) => ({
-      ...item,
-      percent: Math.max((item.value / max) * 100, item.value > 0 ? 6 : 0),
+    const typeByReport = {
+      sales: "line",
+      listings: "pie",
+      "top-properties": "bar",
+      "revenue-by-agent": "bar",
+      "pending-offers-aging": "bar",
+      "active-subscriptions": "pie",
+    };
+
+    return {
+      data,
+      type: typeByReport[reportType] || "bar",
       metric: firstNumericColumn,
-    }));
-  }, [columns, rows]);
+    };
+  }, [columns, reportType, rows]);
 
   const buildEndpoint = () => {
     const params = new URLSearchParams();
@@ -132,6 +130,9 @@ export default function ReportBuilderPage({ setPage }) {
     return `${selectedReport.endpoint}${query ? `?${query}` : ""}`;
   };
 
+  const buildExportEndpoint = () =>
+    buildEndpoint().replace(selectedReport.endpoint, `${selectedReport.endpoint}/export`);
+
   const handlePreview = async () => {
     setLoading(true);
     setError("");
@@ -144,34 +145,6 @@ export default function ReportBuilderPage({ setPage }) {
       setError(err.message || "Could not load report preview.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const exportReport = async (format) => {
-    if (!rows.length) return;
-
-    setError("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const exportEndpoint = buildEndpoint().replace(selectedReport.endpoint, `${selectedReport.endpoint}/export`);
-      const separator = exportEndpoint.includes("?") ? "&" : "?";
-      const response = await fetch(`${API_BASE}${exportEndpoint}${separator}format=${format}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Export failed.");
-      }
-
-      const disposition = response.headers.get("Content-Disposition") || "";
-      const filenameMatch = disposition.match(/filename="([^"]+)"/);
-      const filename = filenameMatch?.[1] || `${report?.type || reportType}.${format === "excel" ? "xlsx" : "csv"}`;
-      const blob = await response.blob();
-      downloadBlob(blob, filename);
-    } catch (err) {
-      setError(err.message || "Export failed.");
     }
   };
 
@@ -271,17 +244,12 @@ export default function ReportBuilderPage({ setPage }) {
               <p className="dash-sub">{rows.length ? `${rows.length} rows loaded.` : "Run a preview to load report data."}</p>
             </div>
 
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-              <button className="btn-ghost" type="button" onClick={() => exportReport("csv")} disabled={!rows.length}>
-                CSV Export
-              </button>
-              <button className="btn-primary" type="button" onClick={() => exportReport("excel")} disabled={!rows.length}>
-                Excel Export
-              </button>
-              <button className="btn-ghost" type="button" onClick={() => exportReport("pdf")} disabled={!rows.length}>
-                PDF Export
-              </button>
-            </div>
+            <ExportMenu
+              exportEndpoint={buildExportEndpoint()}
+              disabled={!rows.length}
+              filenameBase={report?.type || reportType}
+              onError={setError}
+            />
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}
@@ -297,21 +265,17 @@ export default function ReportBuilderPage({ setPage }) {
 
           {!error && !loading && rows.length > 0 && (
             <>
-              {chart.length > 0 && (
-                <div style={{ display: "grid", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                  <p className="profile-card-title" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: "none" }}>
-                    Preview Chart
-                  </p>
-                  {chart.map((item, index) => (
-                    <div key={`${item.label}-${index}`} style={{ display: "grid", gridTemplateColumns: "minmax(120px, 220px) 1fr auto", gap: "0.75rem", alignItems: "center" }}>
-                      <span style={{ fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
-                      <div style={{ height: 12, borderRadius: 999, background: "var(--primary-light)", overflow: "hidden" }}>
-                        <div style={{ width: `${item.percent}%`, height: "100%", background: "var(--primary)", borderRadius: 999 }} />
-                      </div>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)", minWidth: 64, textAlign: "right" }}>{item.value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                  <p className="dash-sub" style={{ margin: 0 }}>Metric: {chart[0].metric.replace(/_/g, " ")}</p>
+              {chartConfig && (
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <Chart
+                    type={chartConfig.type}
+                    data={chartConfig.data}
+                    xKey="label"
+                    yKey="value"
+                    title="Preview Chart"
+                    height={300}
+                  />
+                  <p className="dash-sub" style={{ margin: 0 }}>Metric: {chartConfig.metric.replace(/_/g, " ")}</p>
                 </div>
               )}
 

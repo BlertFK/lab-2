@@ -1,5 +1,7 @@
 const db = require("../config/db");
 const viewingRepository = require("../repositories/viewingRepository");
+const notificationService = require("./notificationService");
+const socketService = require("./socketService");
 
 const getProperty = async (propertyId) => {
   const [rows] = await db.query("SELECT id, seller_id, status FROM properties WHERE id = ?", [propertyId]);
@@ -52,7 +54,19 @@ const createViewing = async (body, user) => {
     updated_by: user.id,
   });
 
-  return viewingRepository.findById(id);
+  const viewing = await viewingRepository.findById(id);
+  const payload = { viewing };
+  socketService.emitToUsers([viewing.buyer_id, viewing.seller_id], "viewing:scheduled", payload);
+  await notificationService.createNotification({
+    user_id: viewing.seller_id,
+    type: "viewing_scheduled",
+    title: "New viewing scheduled",
+    message: `${viewing.buyer_name || "A buyer"} requested a viewing for ${viewing.property_title || "your property"}.`,
+    link: "/dashboard",
+    payload,
+  });
+
+  return viewing;
 };
 
 const listViewings = (user) => viewingRepository.listForUser(user);
@@ -93,7 +107,35 @@ const updateViewingStatus = async (id, body, user) => {
     updated_by: user.id,
   });
 
-  return viewingRepository.findById(id);
+  const updatedViewing = await viewingRepository.findById(id);
+  const payload = { viewing: updatedViewing };
+
+  if (body.status === "confirmed") {
+    socketService.emitToUsers([updatedViewing.buyer_id, updatedViewing.seller_id], "viewing:confirmed", payload);
+    await notificationService.createNotification({
+      user_id: updatedViewing.buyer_id,
+      type: "viewing_confirmed",
+      title: "Viewing confirmed",
+      message: `Your viewing for ${updatedViewing.property_title || "a property"} was confirmed.`,
+      link: "/dashboard",
+      payload,
+    });
+  }
+
+  if (body.status === "cancelled") {
+    const recipientId = user.id === updatedViewing.buyer_id ? updatedViewing.seller_id : updatedViewing.buyer_id;
+    socketService.emitToUsers([updatedViewing.buyer_id, updatedViewing.seller_id], "viewing:cancelled", payload);
+    await notificationService.createNotification({
+      user_id: recipientId,
+      type: "viewing_cancelled",
+      title: "Viewing cancelled",
+      message: `The viewing for ${updatedViewing.property_title || "a property"} was cancelled.`,
+      link: "/dashboard",
+      payload,
+    });
+  }
+
+  return updatedViewing;
 };
 
 module.exports = {
@@ -102,4 +144,3 @@ module.exports = {
   getViewing,
   updateViewingStatus,
 };
-

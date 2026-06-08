@@ -263,3 +263,7 @@ export default function App() {
     </>
   );
 }
+//cd /Users/fadilbayrami/Desktop/Lab\ 2/lab-2/backend
+//node server.js
+// cd /Users/fadilbayrami/Desktop/Lab\ 2/lab-2/frontend
+//npm start

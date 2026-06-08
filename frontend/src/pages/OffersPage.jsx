@@ -44,6 +44,7 @@ function DashboardTop({ user, setPage, setRootPage, onLogout }) {
 
 export default function OffersPage({ user, setPage, setRootPage, onLogout, showToast }) {
   const [offers, setOffers] = useState([]);
+  const [activeTab, setActiveTab] = useState(user?.role === "seller" ? "incoming" : "outgoing");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -64,6 +65,10 @@ export default function OffersPage({ user, setPage, setRootPage, onLogout, showT
   useEffect(() => {
     loadOffers();
   }, []);
+
+  useEffect(() => {
+    setActiveTab(user?.role === "seller" ? "incoming" : "outgoing");
+  }, [user?.role]);
 
   const updateStatus = async (offer, status) => {
     setBusyId(offer.id);
@@ -101,6 +106,10 @@ export default function OffersPage({ user, setPage, setRootPage, onLogout, showT
     }
   };
 
+  const incomingOffers = offers.filter((offer) => offer.seller_id === user?.id);
+  const outgoingOffers = offers.filter((offer) => offer.buyer_id === user?.id);
+  const visibleOffers = activeTab === "incoming" ? incomingOffers : outgoingOffers;
+
   return (
     <div className="dashboard">
       <DashboardTop user={user} setPage={setPage} setRootPage={setRootPage} onLogout={onLogout} />
@@ -110,6 +119,24 @@ export default function OffersPage({ user, setPage, setRootPage, onLogout, showT
           <div>
             <h3 className="buyer-section-title">Offers</h3>
             <p className="dash-sub">All submitted and received offers for your account.</p>
+          </div>
+          <div className="workflow-tabs" aria-label="Offer direction">
+            <button
+              className={`workflow-tab-btn ${activeTab === "incoming" ? "active" : ""}`}
+              onClick={() => setActiveTab("incoming")}
+              type="button"
+            >
+              Incoming
+              <span>{incomingOffers.length}</span>
+            </button>
+            <button
+              className={`workflow-tab-btn ${activeTab === "outgoing" ? "active" : ""}`}
+              onClick={() => setActiveTab("outgoing")}
+              type="button"
+            >
+              Outgoing
+              <span>{outgoingOffers.length}</span>
+            </button>
           </div>
         </div>
 
@@ -123,9 +150,16 @@ export default function OffersPage({ user, setPage, setRootPage, onLogout, showT
           </div>
         )}
 
-        {!loading && !error && offers.length > 0 && (
+        {!loading && !error && offers.length > 0 && visibleOffers.length === 0 && (
+          <div className="buyer-empty-state">
+            <p>No {activeTab} offers.</p>
+            <span>{activeTab === "incoming" ? "Offers from buyers will appear here." : "Offers you submit will appear here."}</span>
+          </div>
+        )}
+
+        {!loading && !error && visibleOffers.length > 0 && (
           <div className="workflow-list">
-            {offers.map((offer) => (
+            {visibleOffers.map((offer) => (
               <div className="workflow-card" key={offer.id}>
                 <div className="workflow-main">
                   <div>

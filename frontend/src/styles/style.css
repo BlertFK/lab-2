@@ -2457,6 +2457,197 @@
   grid-template-columns: 1fr;
 }
 
+.workflow-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.workflow-tab-btn {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  min-height: 36px;
+  padding: 0 0.85rem;
+  transition: all 0.18s ease;
+}
+
+.workflow-tab-btn:hover,
+.workflow-tab-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.workflow-tab-btn span {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.72rem;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 6px;
+}
+
+.viewing-calendar {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 1.25rem;
+}
+
+.viewing-day-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.viewing-day-head {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.viewing-day-head strong {
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.viewing-day-head span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.viewing-day-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.viewing-calendar-item {
+  align-items: start;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 64px minmax(0, 1fr);
+  padding: 0.8rem;
+}
+
+.viewing-calendar-time {
+  color: var(--primary);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.viewing-calendar-item h4 {
+  color: var(--text);
+  font-size: 0.95rem;
+  margin: 0.45rem 0 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.viewing-calendar-item p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.transaction-stepper {
+  align-items: center;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+  padding-top: 1rem;
+  position: relative;
+}
+
+.transaction-stepper.terminal {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.transaction-step {
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.55rem;
+  min-height: 52px;
+  min-width: 0;
+  padding: 0.7rem;
+}
+
+.transaction-step span {
+  align-items: center;
+  background: #e2e8f0;
+  border-radius: 999px;
+  color: #475569;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+  font-weight: 800;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+
+.transaction-step strong {
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+  text-transform: capitalize;
+}
+
+.transaction-step.done {
+  background: var(--primary-light);
+  border-color: rgba(37, 99, 235, 0.22);
+  color: var(--primary-dark);
+}
+
+.transaction-step.done span {
+  background: var(--primary);
+  color: white;
+}
+
+.transaction-step.current {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.transaction-step.terminal-step.cancelled,
+.transaction-step.terminal-step.refunded {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.transaction-step.terminal-step.cancelled span,
+.transaction-step.terminal-step.refunded span {
+  background: #dc2626;
+  color: white;
+}
+
 .workflow-back-btn {
   margin-bottom: 1.25rem;
 }
@@ -2470,6 +2661,11 @@
 
 .transaction-detail-card,
 .transaction-action-card {
+  max-width: none;
+}
+
+.transaction-summary-card {
+  grid-column: 1 / -1;
   max-width: none;
 }
 

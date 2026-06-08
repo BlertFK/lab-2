@@ -1,8 +1,13 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
+const { Server } = require("socket.io");
 require("dotenv").config();
 
 const db = require("./config/db");
+const { connectMongo } = require("./config/mongo");
+const { startMongoArchiver } = require("./jobs/mongoArchiver.job");
+const { registerSocketHandlers } = require("./services/socketService");
 const authRoutes = require("./routes/authRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -20,11 +25,22 @@ const propertyImageRoutes = require("./routes/propertyImageRoutes");
 const agencyRoutes = require("./routes/agencyRoutes");
 const agentRoutes = require("./routes/agentRoutes");
 const planRoutes = require("./routes/planRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const lookupRoutes = require("./routes/lookupRoutes");
 
 const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+
+registerSocketHandlers(io);
 
 app.use(cors());
+app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -70,6 +86,7 @@ app.get("/api", (req, res) => {
       "/api/agencies",
       "/api/agents",
       "/api/plans",
+      "/api/payments",
       "/api/property-types",
       "/api/categories",
       "/api/cities",
@@ -92,7 +109,10 @@ const startServer = async () => {
     console.error("Database connection failed:", error.message);
   }
 
-  app.listen(PORT, () => {
+  await connectMongo();
+  startMongoArchiver();
+
+  httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 };

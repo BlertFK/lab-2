@@ -4,6 +4,7 @@ import BuyerSubnav from "../components/BuyerSubnav";
 
 const formatMoney = (amount) => `EUR ${Number(amount || 0).toLocaleString()}`;
 const formatDateTime = (value) => value ? new Date(value).toLocaleString("en-US") : "-";
+const TRANSACTION_STEPS = ["pending", "in_progress", "completed"];
 
 const NEXT_STATUSES = {
   pending: ["in_progress", "cancelled"],
@@ -12,6 +13,32 @@ const NEXT_STATUSES = {
   cancelled: [],
   refunded: [],
 };
+
+function TransactionStatusStepper({ status }) {
+  const currentIndex = TRANSACTION_STEPS.indexOf(status);
+  const isTerminal = ["cancelled", "refunded"].includes(status);
+
+  return (
+    <div className={`transaction-stepper ${isTerminal ? "terminal" : ""}`} aria-label="Transaction status">
+      {TRANSACTION_STEPS.map((step, index) => {
+        const isDone = currentIndex >= index || (status === "refunded" && step === "completed");
+        const isCurrent = status === step;
+        return (
+          <div className={`transaction-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`} key={step}>
+            <span>{index + 1}</span>
+            <strong>{step.replace("_", " ")}</strong>
+          </div>
+        );
+      })}
+      {isTerminal && (
+        <div className={`transaction-step terminal-step ${status}`}>
+          <span>!</span>
+          <strong>{status}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DashboardTop({ user, setPage, setRootPage, onLogout }) {
   const isBuyer = user?.role === "buyer";
@@ -122,9 +149,12 @@ export default function TransactionDetailPage({ user, transactionId, setPage, se
                 <div className="workflow-amount">{formatMoney(transaction.amount)}</div>
               </div>
 
+              <TransactionStatusStepper status={transaction.status} />
+
               <div className="profile-details">
                 <div className="profile-row"><span className="profile-key">Buyer</span><span className="profile-val">{transaction.buyer_name}</span></div>
                 <div className="profile-row"><span className="profile-key">Seller</span><span className="profile-val">{transaction.seller_name}</span></div>
+                <div className="profile-row"><span className="profile-key">Property</span><span className="profile-val">{transaction.property_title}</span></div>
                 <div className="profile-row"><span className="profile-key">Commission</span><span className="profile-val">{formatMoney(transaction.commission_amount)}</span></div>
                 <div className="profile-row"><span className="profile-key">Payment Method</span><span className="profile-val">{transaction.payment_method || "-"}</span></div>
                 <div className="profile-row"><span className="profile-key">Created</span><span className="profile-val">{formatDateTime(transaction.created_at)}</span></div>
@@ -178,6 +208,24 @@ export default function TransactionDetailPage({ user, transactionId, setPage, se
                   <span>Sellers and admins update transaction status.</span>
                 </div>
               )}
+            </div>
+
+            <div className="buyer-section-card transaction-summary-card">
+              <div className="buyer-section-head">
+                <div>
+                  <h3 className="buyer-section-title">Deal Summary</h3>
+                  <p className="dash-sub">Key identifiers for support, reports, and reconciliation.</p>
+                </div>
+              </div>
+
+              <div className="workflow-meta-grid">
+                <div><span>Transaction</span><strong>#{transaction.id}</strong></div>
+                <div><span>Offer</span><strong>{transaction.offer_id ? `#${transaction.offer_id}` : "-"}</strong></div>
+                <div><span>Property</span><strong>{transaction.property_id ? `#${transaction.property_id}` : "-"}</strong></div>
+                <div><span>Agent</span><strong>{transaction.agent_id ? `#${transaction.agent_id}` : "-"}</strong></div>
+                <div><span>Buyer ID</span><strong>{transaction.buyer_id ? `#${transaction.buyer_id}` : "-"}</strong></div>
+                <div><span>Seller ID</span><strong>{transaction.seller_id ? `#${transaction.seller_id}` : "-"}</strong></div>
+              </div>
             </div>
           </div>
         )}
