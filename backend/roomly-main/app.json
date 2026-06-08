@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Roomly",
+    "slug": "roomly",
+    "scheme": "roomly",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#e8edf2"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fatkoou.roomly",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#e8edf2"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.fatkoou.roomly"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-web-browser",
+      "expo-image-picker",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#2563eb"
+        }
+      ]
+    ],
+    "notification": {
+      "iosDisplayInForeground": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "51c6cc1d-acd2-4817-b0a8-979f3a0448f7"
+      }
+    }
+  }
+}

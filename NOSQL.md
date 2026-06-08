@@ -5,72 +5,102 @@ Owner track: Fadil - MongoDB / NoSQL portion
 
 ## Current Status
 
-MongoDB is documented in the Fadil specification, but it is not implemented in the current repository.
+MongoDB is implemented as an optional NoSQL layer alongside the existing MySQL database.
 
-The current backend uses MySQL through:
+The backend always keeps the SQL application flow available. If MongoDB is not configured or cannot connect, the server logs the issue and continues with SQL fallback behavior.
 
-- `backend/config/db.js`
-- `mysql2`
-
-There is no current MongoDB connection file, Mongoose setup, Mongo model directory, or archive job in the implemented codebase.
-
-## NoSQL Scope From Specification
-
-The specification expects MongoDB support for:
-
-- `ChatMessageArchive`
-- `AuditLogArchive`
-- `PropertyViewLog`
-- nightly Mongo archiver job
-- top properties report using Mongo view logs
-
-Expected target files from the specification include:
+Implemented files:
 
 - `backend/config/mongo.js`
+- `backend/models/mongo/PropertyViewLog.js`
 - `backend/models/mongo/ChatMessageArchive.js`
 - `backend/models/mongo/AuditLogArchive.js`
-- `backend/models/mongo/PropertyViewLog.js`
 - `backend/jobs/mongoArchiver.job.js`
+- `backend/services/propertyViewLogService.js`
 
-These files do not currently exist.
+## Mongo Connection
 
-## Current Report Behavior
+MongoDB connection setup lives in `backend/config/mongo.js`.
 
-`backend/services/reportService.js` includes a Top Properties by Views report.
+The connection helper reads:
 
-Current behavior:
+- `MONGO_URI`
+- `MONGODB_URI`
+- `MONGO_CONNECT_TIMEOUT_MS`
 
-- If a SQL `property_view_logs` table exists, it can use that table.
-- If no view-log table exists, it falls back to `properties.views_count`.
-- If neither source has real data, view counts are effectively zero.
+`connectMongo()` is called during server startup in `backend/server.js` after the SQL connection check. It uses Mongoose and a cached connection promise so repeated calls do not create duplicate connection attempts.
 
-This means the current Top Properties report is functional as a SQL-backed report, but it does not yet satisfy the MongoDB-specific requirement for F59.
+If no Mongo URI is configured, the backend logs:
 
-## Intended Mongo Collections
+```text
+MongoDB not configured. Continuing with SQL fallback.
+```
 
-### PropertyViewLog
+If the connection fails, the backend logs the error and continues running.
 
-Purpose: store property view events without growing MySQL tables too aggressively.
+Example local configuration:
 
-Suggested fields:
+```env
+MONGO_URI=mongodb://localhost:27017/realestate
+MONGO_CONNECT_TIMEOUT_MS=2500
+```
+
+## PropertyViewLog
+
+Model file:
+
+- `backend/models/mongo/PropertyViewLog.js`
+
+Collection:
+
+- `property_view_logs`
+
+Purpose:
+
+- Store property view events in MongoDB.
+- Support Top Properties reporting from Mongo when MongoDB is available.
+- Avoid relying only on a SQL counter for view analytics.
+
+Fields:
 
 - `property_id`
 - `user_id`
 - `ip_address`
 - `user_agent`
-- `viewed_at`
 - `source`
+- `viewed_at`
 
-Usage:
+Indexes:
 
-- A property details endpoint or view-tracking endpoint writes one document per property view.
-- The Top Properties report aggregates these documents by `property_id` and date range.
+- `property_id`
+- `user_id`
+- `viewed_at`
+- compound index on `{ property_id: 1, viewed_at: -1 }`
 
-### ChatMessageArchive
+Write path:
 
-Purpose: move old chat messages from MySQL to MongoDB while preserving searchable history.
+- `POST /api/properties/:id/track-view`
+- `backend/services/propertyService.js`
+- `backend/services/propertyViewLogService.js`
 
-Suggested fields:
+The endpoint still increments the SQL property view count, then attempts to write a Mongo `PropertyViewLog`. If MongoDB is unavailable or the write fails, the request continues safely.
+
+## ChatMessageArchive
+
+Model file:
+
+- `backend/models/mongo/ChatMessageArchive.js`
+
+Collection:
+
+- `chat_message_archives`
+
+Purpose:
+
+- Store older chat messages archived from MySQL.
+- Keep recent operational messages in SQL while preserving long-term message history in MongoDB.
+
+Fields:
 
 - `message_id`
 - `thread_id`
@@ -80,20 +110,40 @@ Suggested fields:
 - `sender_id`
 - `body`
 - `attachment_file_id`
+- `is_edited`
+- `edited_at`
+- `read_at`
 - `created_at`
 - `archived_at`
 
-Usage:
+Indexes:
 
-- A scheduled archiver moves older MySQL messages into MongoDB.
-- MySQL keeps recent operational records.
-- MongoDB stores long-term message history.
+- unique/indexed `message_id`
+- `thread_id`
+- `property_id`
+- `buyer_id`
+- `seller_id`
+- `sender_id`
+- `created_at`
+- `archived_at`
+- compound index on `{ thread_id: 1, created_at: 1 }`
 
-### AuditLogArchive
+## AuditLogArchive
 
-Purpose: preserve old audit log records for compliance and investigation without keeping all historical logs in MySQL.
+Model file:
 
-Suggested fields:
+- `backend/models/mongo/AuditLogArchive.js`
+
+Collection:
+
+- `audit_log_archives`
+
+Purpose:
+
+- Store older audit logs archived from MySQL.
+- Preserve historical audit data without keeping all long-term records in SQL.
+
+Fields:
 
 - `audit_log_id`
 - `user_id`
@@ -107,44 +157,113 @@ Suggested fields:
 - `created_at`
 - `archived_at`
 
-## Archiving Strategy
+Indexes:
 
-The intended nightly job should:
+- unique/indexed `audit_log_id`
+- `user_id`
+- `action`
+- `entity`
+- `entity_id`
+- `created_at`
+- `archived_at`
+- compound index on `{ entity: 1, entity_id: 1, created_at: -1 }`
 
-1. Connect to MySQL and MongoDB.
-2. Select old records from MySQL based on a retention window.
-3. Insert archive documents into MongoDB.
-4. Delete or mark archived MySQL rows only after successful Mongo writes.
-5. Log the archive count and failures.
+`old_value` and `new_value` use mixed Mongo values. The archiver attempts to parse JSON strings before storing them.
 
-Recommended retention windows:
+## Mongo Archiver Job
 
-- Messages: archive after 90 days.
-- Audit logs: archive after 180 days.
-- Property view logs: write directly to MongoDB instead of archiving from MySQL.
+Job file:
 
-## Current Gaps
+- `backend/jobs/mongoArchiver.job.js`
 
-The following NoSQL items are still missing:
+Startup:
 
-- MongoDB dependency and connection setup
-- Mongoose models
-- Mongo archive job
-- View tracking endpoint writing to MongoDB
-- Top Properties report aggregation from MongoDB
-- Operational documentation for MongoDB environment variables
+- `startMongoArchiver()` is called from `backend/server.js`.
+- The job only starts when `MONGO_ARCHIVE_ENABLED=true`.
+- The job uses `node-cron`.
 
-## Environment Variables To Add Later
-
-When MongoDB is implemented, add environment variables such as:
+Environment variables:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/realestate
 MONGO_ARCHIVE_ENABLED=true
-MONGO_ARCHIVE_CRON=0 2 * * *
+MONGO_ARCHIVE_CRON=0 3 * * *
+MONGO_ARCHIVE_BATCH_SIZE=500
+MONGO_MESSAGE_ARCHIVE_DAYS=90
+MONGO_AUDIT_ARCHIVE_DAYS=180
+```
+
+Defaults:
+
+- `MONGO_ARCHIVE_CRON`: `0 3 * * *`
+- `MONGO_ARCHIVE_BATCH_SIZE`: `500`
+- `MONGO_MESSAGE_ARCHIVE_DAYS`: `90`
+- `MONGO_AUDIT_ARCHIVE_DAYS`: `180`
+
+Behavior:
+
+1. Check that MongoDB is connected with `isMongoAvailable()`.
+2. Archive old rows from SQL `messages` into `chat_message_archives`.
+3. Archive old rows from SQL `audit_logs` into `audit_log_archives`.
+4. Use Mongo `bulkWrite` with upserts so repeated runs do not duplicate archived documents.
+5. Delete archived SQL rows only after Mongo write succeeds.
+6. Log archive counts or failures.
+
+The job validates the cron expression before scheduling. It also prevents overlapping archive runs.
+
+## Top Properties Report
+
+Report file:
+
+- `backend/services/reportService.js`
+
+Report endpoint:
+
+- `GET /api/reports/top-properties`
+- `GET /api/reports/top-properties/export`
+
+When MongoDB is available, Top Properties uses `PropertyViewLog` first:
+
+1. Aggregate `property_view_logs` by `property_id`.
+2. Filter by `viewed_at` using the requested date range.
+3. Sort properties by Mongo view count.
+4. Load matching property details, favorites, and offer counts from SQL.
+5. Return report rows with `parameters.source = "mongo"`.
+
+If MongoDB is not available, the report falls back to SQL:
+
+- SQL `property_view_logs` table if present.
+- Otherwise `properties.views_count`.
+- Otherwise zero view counts.
+
+This keeps the report functional even when MongoDB is not configured.
+
+## Operational Notes
+
+MongoDB is optional for local development, but required to fully satisfy the NoSQL/reporting behavior.
+
+To verify Mongo collections locally:
+
+```bash
+mongosh
+use realestate
+show collections
+db.property_view_logs.find().pretty()
+db.chat_message_archives.find().pretty()
+db.audit_log_archives.find().pretty()
+```
+
+To create a `PropertyViewLog`, start the backend with Mongo configured and call:
+
+```http
+POST /api/properties/:id/track-view
+```
+
+Then check:
+
+```javascript
+db.property_view_logs.find().pretty()
 ```
 
 ## Summary
 
-The current repository documents the intended NoSQL design but does not yet implement MongoDB. The SQL domain and report features are partially implemented, while the Mongo-specific requirements remain future work.
-
+The repository now implements the Fadil NoSQL scope with a Mongoose connection, three Mongo collections, property view tracking, a cron-based Mongo archiver, and Mongo-backed Top Properties reporting with SQL fallback.

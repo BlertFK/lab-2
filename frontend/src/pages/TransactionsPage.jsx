@@ -4,6 +4,33 @@ import BuyerSubnav from "../components/BuyerSubnav";
 
 const formatMoney = (amount) => `EUR ${Number(amount || 0).toLocaleString()}`;
 const formatDate = (value) => value ? new Date(value).toLocaleDateString("en-US") : "-";
+const TRANSACTION_STEPS = ["pending", "in_progress", "completed"];
+
+function TransactionStatusStepper({ status }) {
+  const currentIndex = TRANSACTION_STEPS.indexOf(status);
+  const isTerminal = ["cancelled", "refunded"].includes(status);
+
+  return (
+    <div className={`transaction-stepper ${isTerminal ? "terminal" : ""}`} aria-label="Transaction status">
+      {TRANSACTION_STEPS.map((step, index) => {
+        const isDone = currentIndex >= index || (status === "refunded" && step === "completed");
+        const isCurrent = status === step;
+        return (
+          <div className={`transaction-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`} key={step}>
+            <span>{index + 1}</span>
+            <strong>{step.replace("_", " ")}</strong>
+          </div>
+        );
+      })}
+      {isTerminal && (
+        <div className={`transaction-step terminal-step ${status}`}>
+          <span>!</span>
+          <strong>{status}</strong>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DashboardTop({ user, setPage, setRootPage, onLogout }) {
   const isBuyer = user?.role === "buyer";
@@ -109,6 +136,8 @@ export default function TransactionsPage({ user, setPage, setRootPage, onLogout,
                   <div><span>Created</span><strong>{formatDate(transaction.created_at)}</strong></div>
                   <div><span>Completed</span><strong>{formatDate(transaction.completed_at)}</strong></div>
                 </div>
+
+                <TransactionStatusStepper status={transaction.status} />
 
                 <div className="workflow-actions">
                   <button className="btn-primary" onClick={() => openDetail(transaction)}>View Details</button>

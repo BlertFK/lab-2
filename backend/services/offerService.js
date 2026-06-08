@@ -1,6 +1,8 @@
 const db = require("../config/db");
 const offerRepository = require("../repositories/offerRepository");
 const transactionRepository = require("../repositories/transactionRepository");
+const notificationService = require("./notificationService");
+const socketService = require("./socketService");
 
 const getProperty = async (propertyId) => {
   const [rows] = await db.query("SELECT id, seller_id, agent_id, status FROM properties WHERE id = ?", [propertyId]);
@@ -53,7 +55,19 @@ const createOffer = async (body, user) => {
     updated_by: user.id,
   });
 
-  return offerRepository.findById(id);
+  const offer = await offerRepository.findById(id);
+  const payload = { offer };
+  socketService.emitToUsers([offer.buyer_id, offer.seller_id], "offer:new", payload);
+  await notificationService.createNotification({
+    user_id: offer.seller_id,
+    type: "offer_new",
+    title: "New offer received",
+    message: `${offer.buyer_name || "A buyer"} made an offer on ${offer.property_title || "your property"}.`,
+    link: "/dashboard",
+    payload,
+  });
+
+  return offer;
 };
 
 const createCounterOffer = async (offerId, body, user) => {
@@ -85,7 +99,19 @@ const createCounterOffer = async (offerId, body, user) => {
   });
 
   await offerRepository.updateStatus(original.id, "countered", user.id);
-  return offerRepository.findById(id);
+  const offer = await offerRepository.findById(id);
+  const payload = { offer, original_offer_id: original.id };
+  socketService.emitToUsers([offer.buyer_id, offer.seller_id], "offer:countered", payload);
+  await notificationService.createNotification({
+    user_id: offer.buyer_id,
+    type: "offer_countered",
+    title: "Counter-offer received",
+    message: `${offer.seller_name || "The seller"} sent a counter-offer for ${offer.property_title || "a property"}.`,
+    link: "/dashboard",
+    payload,
+  });
+
+  return offer;
 };
 
 const listOffers = (user) => offerRepository.listForUser(user);
@@ -138,7 +164,34 @@ const updateOfferStatus = async (id, status, user) => {
   }
 
   await offerRepository.updateStatus(id, status, user.id);
-  return offerRepository.findById(id);
+  const updatedOffer = await offerRepository.findById(id);
+  const payload = { offer: updatedOffer };
+
+  if (status === "accepted") {
+    socketService.emitToUsers([updatedOffer.buyer_id, updatedOffer.seller_id], "offer:accepted", payload);
+    await notificationService.createNotification({
+      user_id: updatedOffer.buyer_id,
+      type: "offer_accepted",
+      title: "Offer accepted",
+      message: `Your offer for ${updatedOffer.property_title || "a property"} was accepted.`,
+      link: "/dashboard",
+      payload,
+    });
+  }
+
+  if (status === "rejected") {
+    socketService.emitToUsers([updatedOffer.buyer_id, updatedOffer.seller_id], "offer:rejected", payload);
+    await notificationService.createNotification({
+      user_id: updatedOffer.buyer_id,
+      type: "offer_rejected",
+      title: "Offer rejected",
+      message: `Your offer for ${updatedOffer.property_title || "a property"} was rejected.`,
+      link: "/dashboard",
+      payload,
+    });
+  }
+
+  return updatedOffer;
 };
 
 module.exports = {
@@ -148,4 +201,3 @@ module.exports = {
   getOffer,
   updateOfferStatus,
 };
-

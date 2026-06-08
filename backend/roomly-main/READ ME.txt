@@ -1,0 +1,98 @@
+# Roomly - Roommate & Apartment Finder App
+
+A mobile app built with React Native and Expo for browsing apartment listings.
+
+---
+
+## Prerequisites
+
+Make sure you have these installed before starting:
+
+- **Node.js** (version 16 or higher) — [Download here](https://nodejs.org/)
+- **Expo Go app** on your phone (optional, for testing on your device) — Available on App Store and Google Play
+
+To check if Node is installed, open your terminal and run:
+```
+node --version
+```
+
+---
+
+## How to Run
+
+1. **Open a terminal** (Command Prompt, PowerShell, or VS Code terminal)
+
+2. **Navigate to the project folder:**
+   ```
+   cd roomly-app
+   ```
+
+3. **Install dependencies:**
+   ```
+   npm install
+   ```
+
+4. **Start the app:**
+   ```
+   npx expo start
+   ```
+
+5. **Open the app:**
+   - Press **w** to open in your web browser
+   - Press **a** to open in Android emulator (requires Android Studio)
+   - Scan the **QR code** with Expo Go on your phone
+
+---
+
+## Project Structure
+
+```
+roomly/
+├── App.js                        # App entry point
+├── assets/
+│   └── logo.png                  # Roomly logo
+├── src/
+│   ├── components/
+│   │   └── ListingCard.js        # Reusable listing card
+│   ├── data/
+│   │   └── listings.js           # Mock apartment data
+│   ├── navigation/
+│   │   ├── AppNavigator.js       # Bottom tab navigation
+│   │   └── ListingsStack.js      # Stack nav for listings
+│   └── screens/
+│       ├── HomeScreen.js         # Landing page
+│       ├── ListingsScreen.js     # All listings
+│       ├── DetailsScreen.js      # Single listing details
+│       └── ProfileScreen.js      # Profile placeholder
+```
+
+---
+
+## Troubleshooting
+
+**"expo: command not found"**
+Run `npm install` again, or try `npx expo start` instead of `expo start`.
+
+**Blank white page on web**
+Stop the server (Ctrl+C), then run:
+```
+npx expo start --web --clear
+```
+
+**Port already in use**
+Close other terminals that might be running Expo, or restart your computer.
+
+**Dependencies error**
+Delete `node_modules` and reinstall:
+```
+rm -rf node_modules
+npm install
+```
+
+---
+
+## Tech Stack
+
+- React Native + Expo (SDK 52)
+- React Navigation (bottom tabs + stack)
+- No backend — uses mock data

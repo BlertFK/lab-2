@@ -10,6 +10,38 @@ const formatDateTime = (value) => {
   });
 };
 
+const formatDay = (value) => {
+  if (!value) return "Unscheduled";
+  return new Date(value).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const formatTime = (value) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const groupViewingsByDay = (items) => items.reduce((groups, viewing) => {
+  const key = viewing.scheduled_at
+    ? new Date(viewing.scheduled_at).toISOString().slice(0, 10)
+    : "unscheduled";
+  if (!groups[key]) {
+    groups[key] = {
+      key,
+      label: formatDay(viewing.scheduled_at),
+      items: [],
+    };
+  }
+  groups[key].items.push(viewing);
+  return groups;
+}, {});
+
 function DashboardTop({ user, activeTab, setPage, setRootPage, onLogout }) {
   const isBuyer = user?.role === "buyer";
 
@@ -52,6 +84,7 @@ function DashboardTop({ user, activeTab, setPage, setRootPage, onLogout }) {
 
 export default function ViewingsPage({ user, setPage, setRootPage, onLogout, showToast }) {
   const [viewings, setViewings] = useState([]);
+  const [activeView, setActiveView] = useState("list");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -107,6 +140,22 @@ export default function ViewingsPage({ user, setPage, setRootPage, onLogout, sho
             <h3 className="buyer-section-title">Viewings</h3>
             <p className="dash-sub">Requested, confirmed, completed, and cancelled property tours.</p>
           </div>
+          <div className="workflow-tabs" aria-label="Viewing display">
+            <button
+              className={`workflow-tab-btn ${activeView === "list" ? "active" : ""}`}
+              onClick={() => setActiveView("list")}
+              type="button"
+            >
+              List
+            </button>
+            <button
+              className={`workflow-tab-btn ${activeView === "calendar" ? "active" : ""}`}
+              onClick={() => setActiveView("calendar")}
+              type="button"
+            >
+              Calendar
+            </button>
+          </div>
         </div>
 
         {loading && <p className="loading-text">Loading viewings...</p>}
@@ -119,7 +168,32 @@ export default function ViewingsPage({ user, setPage, setRootPage, onLogout, sho
           </div>
         )}
 
-        {!loading && !error && viewings.length > 0 && (
+        {!loading && !error && viewings.length > 0 && activeView === "calendar" && (
+          <div className="viewing-calendar">
+            {Object.values(groupViewingsByDay(viewings)).map((group) => (
+              <div className="viewing-day-card" key={group.key}>
+                <div className="viewing-day-head">
+                  <strong>{group.label}</strong>
+                  <span>{group.items.length} viewing{group.items.length === 1 ? "" : "s"}</span>
+                </div>
+                <div className="viewing-day-list">
+                  {group.items.map((viewing) => (
+                    <div className="viewing-calendar-item" key={viewing.id}>
+                      <div className="viewing-calendar-time">{formatTime(viewing.scheduled_at)}</div>
+                      <div>
+                        <span className={`workflow-status ${viewing.status}`}>{viewing.status}</span>
+                        <h4>{viewing.property_title}</h4>
+                        <p>{user?.role === "buyer" ? `Seller: ${viewing.seller_name}` : `Buyer: ${viewing.buyer_name}`}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && viewings.length > 0 && activeView === "list" && (
           <div className="workflow-list">
             {viewings.map((viewing) => (
               <div className="workflow-card" key={viewing.id}>

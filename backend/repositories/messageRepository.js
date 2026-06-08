@@ -14,9 +14,10 @@ const create = async ({ thread_id, sender_id, body, attachment_file_id }, execut
 
 const findById = async (id, executor = db) => {
   const [rows] = await executor.query(
-    `SELECT m.*, mt.buyer_id, mt.seller_id
+    `SELECT m.*, mt.buyer_id, mt.seller_id, sender.name AS sender_name, sender.email AS sender_email, sender.role AS sender_role
      FROM messages m
      INNER JOIN message_threads mt ON mt.id = m.thread_id
+     INNER JOIN users sender ON sender.id = m.sender_id
      WHERE m.id = ?`,
     [id]
   );
