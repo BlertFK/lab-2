@@ -1339,3 +1339,9 @@
 {"level":"debug","message":"GET /api/properties/my","service":"RealEstate","timestamp":"2026-06-09T11:41:21.993Z"}
 {"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T11:44:24.365Z"}
 {"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T11:44:24.516Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T11:50:01.355Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T11:50:01.455Z"}
+{"level":"debug","message":"GET /api/properties?","service":"RealEstate","timestamp":"2026-06-09T11:50:01.981Z"}
+{"level":"debug","message":"GET /api/properties?","service":"RealEstate","timestamp":"2026-06-09T11:50:02.012Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T11:50:02.997Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T11:50:03.029Z"}
