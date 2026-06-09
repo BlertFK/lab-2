@@ -19,7 +19,7 @@ export default function Properties({ setPage, user, showToast }) {
     const loadProperties = async () => {
       try {
         const data = await apiFetch("/properties?status=available");
-        setProperties((data.properties || []).slice(0, 6));
+        setProperties((data.properties || []).slice(0, 10));
       } catch {
         setProperties([]);
       } finally {
@@ -64,7 +64,13 @@ export default function Properties({ setPage, user, showToast }) {
     setPage("dashboard");
   };
 
-  const handleToggleFavorite = async (propertyId) => {
+  const openProperty = (propertyId) => {
+    setPage("property-detail", { id: propertyId });
+  };
+
+  const handleToggleFavorite = async (event, propertyId) => {
+    event.stopPropagation();
+
     if (!user) {
       showToast?.("Please sign in as a buyer to save favorites.", "error");
       setPage("login");
@@ -131,7 +137,20 @@ export default function Properties({ setPage, user, showToast }) {
             const tag = getTag(index);
 
             return (
-              <div className="prop-card" key={property.id}>
+              <div
+                className="prop-card"
+                key={property.id}
+                onClick={() => openProperty(property.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openProperty(property.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="prop-img-wrap">
                   {property.image_url ? (
                     <img src={property.image_url} alt={property.title} />
@@ -145,7 +164,7 @@ export default function Properties({ setPage, user, showToast }) {
 
                   <button
                     className={`prop-favorite-btn ${isFavorite ? "active" : ""}`}
-                    onClick={() => handleToggleFavorite(property.id)}
+                    onClick={(event) => handleToggleFavorite(event, property.id)}
                     type="button"
                     aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                     title={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -169,7 +188,10 @@ export default function Properties({ setPage, user, showToast }) {
                   <span className="prop-price">{formatPrice(property.price)}</span>
                   <button
                     className="btn-view"
-                    onClick={() => setPage("property-detail", { id: property.id })}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openProperty(property.id);
+                    }}
                   >
                     View Details
                   </button>

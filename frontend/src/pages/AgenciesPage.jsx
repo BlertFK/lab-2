@@ -58,7 +58,20 @@ export default function AgenciesPage({ setPage, setSelectedAgency }) {
         {!loading && !error && agencies.length > 0 && (
           <div className="buyer-card-grid">
             {agencies.map((agency) => (
-              <article className="directory-card" key={agency.id}>
+              <article
+                className="directory-card"
+                key={agency.id}
+                onClick={() => openAgency(agency)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openAgency(agency);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="directory-card-top">
                   {agency.logo_url ? (
                     <img className="directory-logo" src={agency.logo_url} alt={agency.name} />
@@ -77,7 +90,15 @@ export default function AgenciesPage({ setPage, setSelectedAgency }) {
                   </div>
                 </div>
                 <div className="buyer-prop-actions">
-                  <button className="btn-primary" onClick={() => openAgency(agency)}>View Agency</button>
+                  <button
+                    className="btn-primary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openAgency(agency);
+                    }}
+                  >
+                    View Agency
+                  </button>
                 </div>
               </article>
             ))}

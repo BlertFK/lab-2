@@ -1,60 +1,67 @@
-import axios from "axios";
+// Thin wrapper over utils/api.js so the codebase has ONE shared auth/refresh
+// pipeline. CMS pages and FileUploader still import { apiClient } from here.
+//
+// utils/api.js exposes apiFetch(endpoint, options) using the fetch API with
+// localStorage tokens and silent refresh. We reuse it for every verb, plus
+// add a FormData upload helper.
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import { apiFetch, API_BASE, getAccessToken } from "../utils/api";
 
-const instance = axios.create({
-  baseURL: BASE_URL,
-  headers: { "Content-Type": "application/json" },
-});
-
-// Attach token to every request
-instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// On 401 try refresh, else redirect to login
-instance.interceptors.response.use(
-  (res) => res,
-  async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-          localStorage.setItem("token", data.accessToken);
-          if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
-          original.headers.Authorization = `Bearer ${data.accessToken}`;
-          return instance(original);
-        } catch {
-          localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-        }
-      }
-    }
-    return Promise.reject(error.response?.data || error);
-  }
-);
-
-// Convenience wrappers that return data directly
-export const apiClient = {
-  get: (url, params) => instance.get(url, { params }).then((r) => r.data),
-  post: (url, body) => instance.post(url, body).then((r) => r.data),
-  put: (url, body) => instance.put(url, body).then((r) => r.data),
-  patch: (url, body) => instance.patch(url, body).then((r) => r.data),
-  delete: (url) => instance.delete(url).then((r) => r.data),
-  upload: (url, formData, onProgress) =>
-    instance
-      .post(url, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded * 100) / e.total)),
-      })
-      .then((r) => r.data),
+const withQuery = (url, params) => {
+  if (!params || Object.keys(params).length === 0) return url;
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+  ).toString();
+  return qs ? `${url}${url.includes("?") ? "&" : "?"}${qs}` : url;
 };
 
-export default instance;
+export const apiClient = {
+  get: (url, params) => apiFetch(withQuery(url, params), { method: "GET" }),
+  post: (url, body) =>
+    apiFetch(url, { method: "POST", body: body !== undefined ? JSON.stringify(body) : undefined }),
+  put: (url, body) =>
+    apiFetch(url, { method: "PUT", body: body !== undefined ? JSON.stringify(body) : undefined }),
+  patch: (url, body) =>
+    apiFetch(url, { method: "PATCH", body: body !== undefined ? JSON.stringify(body) : undefined }),
+  delete: (url) => apiFetch(url, { method: "DELETE" }),
+
+  // multipart upload — bypasses JSON Content-Type. Uses XHR so callers can
+  // pass onProgress and see byte-level progress events.
+  upload: (url, formData, onProgress) =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}${url}`);
+      const token = getAccessToken();
+      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded * 100) / e.total));
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(xhr.responseText ? JSON.parse(xhr.responseText) : {});
+          } catch {
+            resolve({ raw: xhr.responseText });
+          }
+        } else {
+          let msg = `Upload failed (${xhr.status})`;
+          try {
+            const data = JSON.parse(xhr.responseText || "{}");
+            msg = data.error?.message || data.message || msg;
+          } catch { /* ignore */ }
+          const err = new Error(msg);
+          err.status = xhr.status;
+          reject(err);
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.send(formData);
+    }),
+};
+
+// Backward-compat: previous code did `import instance from "../lib/apiClient"`
+// for one-off axios calls. Provide a minimal compatible default export that
+// forwards verbs to apiClient.
+export default apiClient;

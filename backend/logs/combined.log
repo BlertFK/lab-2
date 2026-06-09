@@ -724,3 +724,56 @@
 {"level":"info","message":"API docs:  http://localhost:5099/api/docs","service":"RealEstate","timestamp":"2026-06-09T02:38:26.776Z"}
 {"level":"info","message":"Socket.IO: /socket.io","service":"RealEstate","timestamp":"2026-06-09T02:38:26.776Z"}
 {"level":"debug","message":"POST /api/auth/register","service":"RealEstate","timestamp":"2026-06-09T02:38:28.630Z"}
+{"level":"debug","message":"GET /api/buyer/dashboard","service":"RealEstate","timestamp":"2026-06-09T02:41:49.358Z"}
+{"level":"debug","message":"GET /api/auth/me","service":"RealEstate","timestamp":"2026-06-09T02:41:49.368Z"}
+{"level":"debug","message":"GET /api/buyer/dashboard","service":"RealEstate","timestamp":"2026-06-09T02:41:49.373Z"}
+{"level":"debug","message":"GET /api/auth/me","service":"RealEstate","timestamp":"2026-06-09T02:41:49.385Z"}
+{"level":"debug","message":"GET /api/viewings","service":"RealEstate","timestamp":"2026-06-09T02:41:54.215Z"}
+{"level":"debug","message":"GET /api/viewings","service":"RealEstate","timestamp":"2026-06-09T02:41:54.219Z"}
+{"level":"debug","message":"GET /api/buyer/dashboard","service":"RealEstate","timestamp":"2026-06-09T02:41:59.416Z"}
+{"level":"debug","message":"GET /api/buyer/dashboard","service":"RealEstate","timestamp":"2026-06-09T02:41:59.422Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T02:42:13.526Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T02:42:13.532Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T02:42:15.116Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T02:42:15.120Z"}
+{"level":"debug","message":"POST /api/auth/register","service":"RealEstate","timestamp":"2026-06-09T02:42:29.472Z"}
+{"level":"debug","message":"POST /api/auth/login","service":"RealEstate","timestamp":"2026-06-09T02:42:41.823Z"}
+{"level":"info","message":"MySQL connected: realestate_db@127.0.0.1:3306","service":"RealEstate","timestamp":"2026-06-09T08:58:53.408Z"}
+{"level":"info","message":"Mongo disabled (MONGO_ENABLED=false). Archive job not scheduled.","service":"RealEstate","timestamp":"2026-06-09T08:58:53.409Z"}
+{"level":"info","message":"Redis disabled (REDIS_ENABLED=false). Cache features are inert.","service":"RealEstate","timestamp":"2026-06-09T08:58:53.410Z"}
+{"level":"info","message":"tokenCleanup scheduled (15 3 * * *)","service":"RealEstate","timestamp":"2026-06-09T08:58:53.464Z"}
+{"level":"info","message":"RealEstate listening on http://localhost:5000 [development]","service":"RealEstate","timestamp":"2026-06-09T08:58:53.469Z"}
+{"level":"info","message":"API docs:  http://localhost:5000/api/docs","service":"RealEstate","timestamp":"2026-06-09T08:58:53.469Z"}
+{"level":"info","message":"Socket.IO: /socket.io","service":"RealEstate","timestamp":"2026-06-09T08:58:53.470Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T08:59:06.103Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T08:59:06.178Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:09:18.346Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:09:18.353Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:12:40.022Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:12:46.014Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:12:57.023Z"}
+{"level":"debug","message":"GET /api/properties?status=available","service":"RealEstate","timestamp":"2026-06-09T09:13:03.024Z"}
+{"level":"debug","message":"GET /api/properties?","service":"RealEstate","timestamp":"2026-06-09T09:15:20.919Z"}
+{"level":"debug","message":"GET /api/properties?","service":"RealEstate","timestamp":"2026-06-09T09:15:20.924Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:23.830Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:23.837Z"}
+{"level":"debug","message":"GET /api/agencies/3","service":"RealEstate","timestamp":"2026-06-09T09:15:25.546Z"}
+{"level":"debug","message":"GET /api/agencies/3","service":"RealEstate","timestamp":"2026-06-09T09:15:25.551Z"}
+{"level":"debug","message":"GET /api/agencies/3/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:25.553Z"}
+{"level":"debug","message":"GET /api/agencies/3/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:25.566Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:29.142Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:29.147Z"}
+{"level":"debug","message":"GET /api/agencies/5","service":"RealEstate","timestamp":"2026-06-09T09:15:29.731Z"}
+{"level":"debug","message":"GET /api/agencies/5/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:29.736Z"}
+{"level":"debug","message":"GET /api/agencies/5","service":"RealEstate","timestamp":"2026-06-09T09:15:29.737Z"}
+{"level":"debug","message":"GET /api/agencies/5/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:29.742Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:32.726Z"}
+{"level":"debug","message":"GET /api/agencies","service":"RealEstate","timestamp":"2026-06-09T09:15:32.732Z"}
+{"level":"debug","message":"GET /api/agencies/2","service":"RealEstate","timestamp":"2026-06-09T09:15:33.522Z"}
+{"level":"debug","message":"GET /api/agencies/2","service":"RealEstate","timestamp":"2026-06-09T09:15:33.527Z"}
+{"level":"debug","message":"GET /api/agencies/2/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:33.528Z"}
+{"level":"debug","message":"GET /api/agencies/2/agents","service":"RealEstate","timestamp":"2026-06-09T09:15:33.535Z"}
+{"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T09:15:35.716Z"}
+{"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T09:15:35.736Z"}
+{"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T09:15:38.246Z"}
+{"level":"debug","message":"GET /api/plans","service":"RealEstate","timestamp":"2026-06-09T09:15:38.250Z"}

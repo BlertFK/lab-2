@@ -18,3 +18,7 @@ backend/.phpunit.result.cache
 .DS_Store
 .vscode/
 Thumbs.db
+
+# --- Root-level env ---
+/.env
+/.env.local
