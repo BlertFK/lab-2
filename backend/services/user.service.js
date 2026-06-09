@@ -33,7 +33,8 @@ async function getById(id) {
     email_verified_at: user.email_verified_at,
     last_login_at: user.last_login_at,
     created_at: user.created_at,
-    roles: user.roles,
+    roles: (user.roles || []).map((role) => role.name || role),
+    role_details: user.roles || [],
     permissions: user.permissions,
   };
 }

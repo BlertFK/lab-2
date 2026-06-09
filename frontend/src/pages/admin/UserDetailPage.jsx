@@ -57,7 +57,9 @@ export default function UserDetailPage({ userId, setPage, onLogout, showToast })
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   };
 
-  const userRoleNames = new Set(user?.roles || []);
+  const roleName = (role) => (typeof role === "string" ? role : role?.name);
+  const userRoles = (user?.roles || []).map(roleName).filter(Boolean);
+  const userRoleNames = new Set(userRoles);
   const available = allRoles.filter((r) => !userRoleNames.has(r.name));
 
   return (
@@ -99,7 +101,7 @@ export default function UserDetailPage({ userId, setPage, onLogout, showToast })
             <div className="profile-card" style={{ maxWidth: "none" }}>
               <p className="profile-card-title">Roles</p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-                {(user.roles || []).map((name) => {
+                {userRoles.map((name) => {
                   const r = allRoles.find((x) => x.name === name);
                   return (
                     <span key={name} style={chipStyle}>
@@ -115,7 +117,7 @@ export default function UserDetailPage({ userId, setPage, onLogout, showToast })
                     </span>
                   );
                 })}
-                {(user.roles || []).length === 0 && <span className="dash-sub">No roles assigned.</span>}
+                {userRoles.length === 0 && <span className="dash-sub">No roles assigned.</span>}
               </div>
 
               {available.length > 0 && (

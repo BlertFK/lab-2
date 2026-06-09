@@ -27,8 +27,21 @@ const QUILL_MODULES = {
   ],
 };
 
-const API_BASE    = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  process.env.REACT_APP_API_BASE ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:5001/api";
 const UPLOADS_BASE = API_BASE.replace(/\/api$/, "");
+
+const parseCmsJson = (value, fallback = {}) => {
+  if (value == null || value === "") return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
 
 export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _user }) {
   const id       = pageId;
@@ -101,9 +114,7 @@ export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _us
       setNewBlockType("text");
       toast.success("Block added.");
       if (data?.block) {
-        const content = data.block.draft_json
-          ? JSON.parse(data.block.draft_json)
-          : {};
+        const content = parseCmsJson(data.block.draft_json);
         dispatch(selectBlock({ blockId: data.block.id, content }));
       }
     },
@@ -148,11 +159,7 @@ export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _us
   });
 
   const handleBlockClick = (block) => {
-    const content = block.draft_json
-      ? JSON.parse(block.draft_json)
-      : block.content_json
-      ? JSON.parse(block.content_json)
-      : {};
+    const content = parseCmsJson(block.draft_json, parseCmsJson(block.content_json));
     dispatch(selectBlock({ blockId: block.id, content }));
   };
 
@@ -165,12 +172,12 @@ export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _us
     dispatch(updateEditingContent({ ...editingBlockContent, [field]: value }));
   };
 
-  // Preview: fetch the published page content from the API and show it in a new tab
-  // using a data URL so it doesn't depend on frontend routing
+  // Preview: fetch admin draft content and render it in a separate document so
+  // frontend routing cannot hide CMS content while editing.
   const handlePreview = async () => {
     if (!page?.slug) return;
     try {
-      const data = await apiClient.get(`/cms/pages/by-slug/${page.slug}`);
+      const data = await apiClient.get(`/cms/pages/by-slug/${page.slug}`, { preview: 1 });
       const sections = data?.page?.sections || [];
 
       // Build a simple HTML preview
@@ -178,7 +185,7 @@ export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _us
       for (const section of sections) {
         bodyHtml += `<h2 style="font-family:sans-serif;margin-top:32px;color:#2563eb">${section.name}</h2>`;
         for (const block of section.blocks || []) {
-          const content = block.rendered_json || {};
+          const content = parseCmsJson(block.rendered_json);
           if (block.type === "text") {
             bodyHtml += `<div style="font-family:sans-serif;line-height:1.7;margin-bottom:12px">${content.value || ""}</div>`;
           } else if (block.type === "image" && content.url) {
@@ -204,7 +211,7 @@ export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _us
       const url  = URL.createObjectURL(blob);
       window.open(url, "_blank");
     } catch {
-      toast.error("Could not load preview. Make sure the page is published.");
+      toast.error("Could not load preview.");
     }
   };
 

@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { verifyToken, requireRole } = require("../middleware/authMiddleware");
+const { verifyToken, optionalVerifyToken, requireRole } = require("../middleware/authMiddleware");
 const cc = require("../controllers/cmsController");
 
 const admin = [verifyToken, requireRole("admin")];
 
 // Pages
 router.get("/pages", ...admin, cc.listPages);
-router.get("/pages/by-slug/:slug", cc.getPageBySlug); // public
+router.get("/pages/by-slug/:slug", optionalVerifyToken, cc.getPageBySlug); // public, admin draft preview when authenticated
 router.get("/pages/:id", ...admin, cc.getPage);
 router.post("/pages", ...admin, cc.createPage);
 router.put("/pages/:id", ...admin, cc.updatePage);

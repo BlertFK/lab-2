@@ -1,5 +1,15 @@
 const repo = require("../repositories/cmsRepository");
 
+const parseJsonValue = (value, fallback = {}) => {
+  if (value == null || value === "") return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
 // ── Pages ──────────────────────────────────────
 const getAllPages = () => repo.findAllPages();
 
@@ -25,8 +35,8 @@ const getPublicPage = async (slug, preview = false) => {
     section.blocks = blocks.map((b) => ({
       ...b,
       rendered_json: preview
-        ? (b.draft_json ? JSON.parse(b.draft_json) : JSON.parse(b.content_json || "{}"))
-        : JSON.parse(b.content_json || "{}"),
+        ? parseJsonValue(b.draft_json, parseJsonValue(b.content_json))
+        : parseJsonValue(b.content_json),
     }));
   }
   page.sections = sections;
@@ -86,7 +96,7 @@ const restoreVersion = async (blockId, versionNumber, updatedBy) => {
   const versions = await repo.getVersionsByBlock(blockId);
   const target = versions.find((v) => v.version_number === parseInt(versionNumber));
   if (!target) return null;
-  const contentJson = JSON.parse(target.content_json);
+  const contentJson = parseJsonValue(target.content_json);
   return updateBlock(blockId, { contentJson, updatedBy });
 };
 

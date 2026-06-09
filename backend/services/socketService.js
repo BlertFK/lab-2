@@ -54,11 +54,12 @@ const addSocketAuth = (io) => {
     }
 
     const roles = decoded.roles || (decoded.role ? [decoded.role] : []);
+    const primaryRole = decoded.role || roles[0] || null;
     socket.user = {
-      id: decoded.id || decoded.sub,
+      id: Number(decoded.id || decoded.sub),
       sub: decoded.sub || decoded.id,
       email: decoded.email,
-      role: decoded.role || roles[0] || null,
+      role: primaryRole ? String(primaryRole).toLowerCase() : null,
       roles,
       permissions: decoded.permissions || [],
       name: decoded.name,

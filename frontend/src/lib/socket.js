@@ -12,7 +12,8 @@ import { getAccessToken } from "../utils/api";
 const SOCKET_URL =
   process.env.REACT_APP_SOCKET_URL ||
   process.env.REACT_APP_API_BASE?.replace(/\/api$/, "") ||
-  "http://localhost:5000";
+  process.env.REACT_APP_API_URL?.replace(/\/api$/, "") ||
+  "http://localhost:5001";
 
 let socket = null;
 

@@ -52,8 +52,13 @@ const sendThreadMessage = async (threadId, body, user) => {
 
     const message = await messageRepository.findById(messageId);
     const updatedThread = await threadRepository.findById(thread.id);
-    socketService.emitToThread(thread.id, "message:new", { thread: updatedThread, message });
+    const payload = { thread: updatedThread, message };
+    const participants = [updatedThread.buyer_id, updatedThread.seller_id];
+
+    socketService.emitToThread(thread.id, "message:new", payload);
+    socketService.emitToUsers(participants, "message:new", payload);
     socketService.emitToThread(thread.id, "thread:updated", { thread: updatedThread });
+    socketService.emitToUsers(participants, "thread:updated", { thread: updatedThread });
 
     return message;
   } catch (error) {
@@ -104,8 +109,11 @@ const markMessageRead = async (messageId, user) => {
 
     const updatedMessage = await messageRepository.findById(id);
     const updatedThread = await threadRepository.findById(message.thread_id);
+    const participants = [updatedThread.buyer_id, updatedThread.seller_id];
     socketService.emitToThread(message.thread_id, "message:read", { message: updatedMessage });
+    socketService.emitToUsers(participants, "message:read", { message: updatedMessage });
     socketService.emitToThread(message.thread_id, "thread:updated", { thread: updatedThread });
+    socketService.emitToUsers(participants, "thread:updated", { thread: updatedThread });
 
     return updatedMessage;
   } catch (error) {

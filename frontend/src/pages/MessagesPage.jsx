@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { io } from "socket.io-client";
-import { API_BASE, apiFetch } from "../utils/api";
-
-const SOCKET_URL = API_BASE.replace(/\/api$/, "");
+import { apiFetch } from "../utils/api";
+import { connectSocket } from "../lib/socket";
 
 /* ─── helpers ─────────────────────────────────────────────── */
 const formatTime = (iso) => {
@@ -196,17 +194,14 @@ export default function MessagesPage({
     const token = localStorage.getItem("token");
     if (!token) return undefined;
 
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-    });
+    const socket = connectSocket();
     socketRef.current = socket;
 
-    socket.on("connect_error", (err) => {
+    const onConnectError = (err) => {
       console.warn("Socket connection error:", err.message);
-    });
+    };
 
-    socket.on("message:new", ({ message, thread }) => {
+    const onMessageNew = ({ message, thread }) => {
       if (!message?.id) return;
       if (message.sender_id === user.id) return;
 
@@ -228,20 +223,20 @@ export default function MessagesPage({
       };
       if (!isActiveThread) delete lastMessagePatch.unread_count;
       reorderThread(message.thread_id, lastMessagePatch);
-    });
+    };
 
-    socket.on("message:read", ({ message }) => {
+    const onMessageRead = ({ message }) => {
       if (!message?.id) return;
       setMessages((prev) => prev.map((item) => (
         item.id === message.id ? { ...item, read_at: message.read_at } : item
       )));
-    });
+    };
 
-    socket.on("thread:updated", ({ thread }) => {
+    const onThreadUpdated = ({ thread }) => {
       mergeThreadUpdate(thread);
-    });
+    };
 
-    socket.on("thread:typing", ({ thread_id, user_id, user_name, is_typing }) => {
+    const onThreadTyping = ({ thread_id, user_id, user_name, is_typing }) => {
       if (!thread_id || user_id === user.id) return;
       setTypingUsers((prev) => {
         const key = `${thread_id}:${user_id}`;
@@ -253,10 +248,23 @@ export default function MessagesPage({
         }
         return next;
       });
-    });
+    };
+
+    socket.on("connect_error", onConnectError);
+    socket.on("message:new", onMessageNew);
+    socket.on("message:read", onMessageRead);
+    socket.on("thread:updated", onThreadUpdated);
+    socket.on("thread:typing", onThreadTyping);
 
     return () => {
-      socket.disconnect();
+      socket.off("connect_error", onConnectError);
+      socket.off("message:new", onMessageNew);
+      socket.off("message:read", onMessageRead);
+      socket.off("thread:updated", onThreadUpdated);
+      socket.off("thread:typing", onThreadTyping);
+      if (activeThreadRef.current?.id) {
+        socket.emit("thread:leave", { thread_id: activeThreadRef.current.id });
+      }
       socketRef.current = null;
     };
   }, [mergeThreadUpdate, reorderThread, user.id]);

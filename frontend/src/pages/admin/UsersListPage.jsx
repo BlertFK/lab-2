@@ -101,7 +101,7 @@ export default function UsersListPage({ setPage, onLogout, onSelectUser }) {
                 ) : rows.map((u) => (
                   <tr key={u.id} style={{ background: "white" }}>
                     <td style={{ ...td, color: "#94a3b8" }}>#{u.id}</td>
-                    <td style={{ ...td, fontWeight: 600 }}>{u.first_name} {u.last_name}</td>
+                    <td style={{ ...td, fontWeight: 600 }}>{[u.first_name, u.last_name].filter(Boolean).join(" ") || u.name || "—"}</td>
                     <td style={td}>{u.email}</td>
                     <td style={td}>{(u.roles || []).join(", ") || "—"}</td>
                     <td style={td}>{u.is_active ? "✓" : "—"}</td>

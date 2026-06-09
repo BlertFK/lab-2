@@ -1,12 +1,12 @@
 const Joi = require("joi");
 const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, "../../.env") });
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 const envSchema = Joi.object({
   NODE_ENV: Joi.string().valid("development", "test", "production").default("development"),
-  PORT: Joi.number().default(5000),
+  PORT: Joi.number().default(5001),
   APP_NAME: Joi.string().default("RealEstate"),
-  FRONTEND_URL: Joi.string().uri().default("http://localhost:5173"),
+  FRONTEND_URL: Joi.string().uri().default("http://localhost:3000"),
   SOCKET_PATH: Joi.string().default("/socket.io"),
 
   DB_HOST: Joi.string().required(),
@@ -23,13 +23,13 @@ const envSchema = Joi.object({
   MONGO_URI: Joi.string().default("mongodb://localhost:27017/realestate_logs"),
   MONGO_ENABLED: Joi.boolean().default(false),
 
-  JWT_ACCESS_SECRET: Joi.string().min(16).required(),
+  JWT_ACCESS_SECRET: Joi.string().min(16),
   JWT_ACCESS_EXPIRES_IN: Joi.string().default("15m"),
-  JWT_REFRESH_SECRET: Joi.string().min(16).required(),
+  JWT_REFRESH_SECRET: Joi.string().min(16),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default("7d"),
   BCRYPT_ROUNDS: Joi.number().default(10),
 
-  CORS_ORIGINS: Joi.string().default("http://localhost:5173,http://localhost:3000"),
+  CORS_ORIGINS: Joi.string().default("http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:5174"),
 
   UPLOAD_DIR: Joi.string().default("./uploads"),
   MAX_UPLOAD_SIZE_MB: Joi.number().default(10),
@@ -84,9 +84,9 @@ const env = {
     enabled: value.MONGO_ENABLED,
   },
   jwt: {
-    accessSecret: value.JWT_ACCESS_SECRET,
+    accessSecret: value.JWT_ACCESS_SECRET || value.JWT_SECRET,
     accessExpiresIn: value.JWT_ACCESS_EXPIRES_IN,
-    refreshSecret: value.JWT_REFRESH_SECRET,
+    refreshSecret: value.JWT_REFRESH_SECRET || value.JWT_SECRET,
     refreshExpiresIn: value.JWT_REFRESH_EXPIRES_IN,
     bcryptRounds: value.BCRYPT_ROUNDS,
   },

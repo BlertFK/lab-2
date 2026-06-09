@@ -2,7 +2,10 @@
 // Tokens live in localStorage; the wrapper auto-attaches Bearer on every request
 // and tries one silent refresh on 401 before propagating the error.
 
-export const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
+export const API_BASE =
+  process.env.REACT_APP_API_BASE ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:5001/api";
 
 const ACCESS_KEY  = "token";          // legacy name kept so existing reads keep working
 const REFRESH_KEY = "refreshToken";

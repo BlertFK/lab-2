@@ -46,6 +46,15 @@ const FIXED_PAGES = new Set([
   "admin-settings", "notifications", "search",
 ]);
 
+const ADMIN_PAGES = new Set([
+  "admin", "cms", "cms-editor",
+  "admin-users", "admin-user-detail", "admin-roles", "admin-audit", "admin-settings",
+]);
+
+const USER_PAGES = new Set([
+  "profile", "change-password", "notifications", "search",
+]);
+
 const getPageFromPath = (pathname) => {
   if (pathname === "/" || pathname === "") return "home";
   if (pathname === "/login") return "login";
@@ -76,6 +85,11 @@ const getPageFromPath = (pathname) => {
   const slug = pathname.replace(/^\//, "");
   if (slug) return `cms-slug:${slug}`;
   return "home";
+};
+
+const getUserIdFromPath = (pathname) => {
+  const match = pathname.match(/^\/admin\/users\/(\d+)$/);
+  return match ? Number(match[1]) : null;
 };
 
 const getPathFromPage = (page) => {
@@ -109,7 +123,7 @@ const getPathFromPage = (page) => {
 
 export default function App() {
   const [selectedCmsPageId, setSelectedCmsPageId] = useState(null);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(() => getUserIdFromPath(window.location.pathname));
   const [searchQuery, setSearchQuery] = useState("");
 
   const [page, setPageState] = useState(() => {
@@ -168,6 +182,7 @@ export default function App() {
 
   useEffect(() => {
     const handlePopState = () => {
+      setSelectedUserId(getUserIdFromPath(window.location.pathname));
       setPageState(getPageFromPath(window.location.pathname));
     };
     window.addEventListener("popstate", handlePopState);
@@ -202,6 +217,8 @@ export default function App() {
           const preservedPages = [
             "home", "properties", "propertyDetails", "agencies",
             "agencyDetail", "plans", "reports", "cms", "cms-editor",
+            "admin-users", "admin-user-detail", "admin-roles", "admin-audit",
+            "admin-settings", "notifications", "profile", "change-password",
           ];
           if (preservedPages.includes(currentPage)) return currentPage;
           if (currentPage.startsWith("cms-slug:")) return currentPage;
@@ -220,19 +237,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const nextPath = getPathFromPage(page);
+    const nextPath = page === "admin-user-detail" && selectedUserId
+      ? `/admin/users/${selectedUserId}`
+      : getPathFromPage(page);
     if (window.location.pathname !== nextPath) {
       window.history.pushState({}, "", nextPath);
     }
-  }, [page]);
+  }, [page, selectedUserId]);
 
   const handleLoginSuccess = useCallback((userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("authExpiresAt", String(Date.now() + 7 * 24 * 60 * 60 * 1000));
     showToast(`Welcome back, ${userData.name}!`, "success");
-    setPageState(userData.role === "admin" ? "admin" : "dashboard");
-  }, [showToast]);
+    const wantsAdminPage = ADMIN_PAGES.has(page);
+    const wantsUserPage = USER_PAGES.has(page);
+    if (userData.role === "admin" && wantsAdminPage) {
+      setPageState(page === "cms-editor" && !selectedCmsPageId ? "cms" : page);
+    } else if (wantsUserPage) {
+      setPageState(page);
+    } else {
+      setPageState(userData.role === "admin" ? "admin" : "dashboard");
+    }
+  }, [page, selectedCmsPageId, showToast]);
 
   const handleLogout = useCallback(() => {
     setUser(null);
@@ -246,6 +273,8 @@ export default function App() {
 
   const isCmsSlugPage = page.startsWith("cms-slug:");
   const cmsSlug = isCmsSlugPage ? page.replace("cms-slug:", "") : null;
+  const needsLogin = !user && (ADMIN_PAGES.has(page) || USER_PAGES.has(page));
+  const needsAdmin = user && ADMIN_PAGES.has(page) && user.role !== "admin";
 
   const showNavbar = [
     "home", "properties", "propertyDetails", "agencies",
@@ -270,6 +299,17 @@ export default function App() {
       )}
       {page === "reset-password" && (
         <ResetPasswordPage setPage={setPage} showToast={showToast} />
+      )}
+
+      {needsLogin && (
+        <LoginPage setPage={setPage} onLoginSuccess={handleLoginSuccess} />
+      )}
+
+      {needsAdmin && (
+        <>
+          <Home setPage={setPage} user={user} showToast={showToast} />
+          <Footer />
+        </>
       )}
 
       {page === "profile" && user && (

@@ -51,6 +51,31 @@ const verifyToken = (req, res, next) => {
   next();
 };
 
+const optionalVerifyToken = (req, _res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return next();
+
+  const decoded =
+    tryVerify(token, process.env.JWT_ACCESS_SECRET) ||
+    tryVerify(token, process.env.JWT_SECRET);
+
+  if (!decoded) return next();
+
+  const roles = decoded.roles || (decoded.role ? [decoded.role] : []);
+  const primaryRole = decoded.role || roles[0] || null;
+  req.user = {
+    id: decoded.id || decoded.sub,
+    sub: decoded.sub || decoded.id,
+    email: decoded.email,
+    role: primaryRole ? String(primaryRole).toLowerCase() : null,
+    roles,
+    permissions: decoded.permissions || [],
+  };
+  next();
+};
+
 const requireRole = (...roles) => (req, res, next) => {
   const userRoles = req.user?.roles?.length ? req.user.roles : [req.user?.role];
   const allowed = userRoles.some((r) => roles.includes(String(r).toLowerCase()) || roles.includes(r));
@@ -60,4 +85,4 @@ const requireRole = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, requireRole };
+module.exports = { verifyToken, optionalVerifyToken, requireRole };
