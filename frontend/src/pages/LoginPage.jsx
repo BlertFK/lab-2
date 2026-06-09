@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiFetch } from "../utils/api";
+import { apiFetch, setTokens } from "../utils/api";
 
 export default function LoginPage({ setPage, onLoginSuccess }) {
     const [form, setForm] = useState({ email: "", password: "" });
@@ -11,14 +11,12 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
         if (!form.email || !form.password) return setError("Please fill in all fields.");
         setLoading(true);
         try {
-            // → POST http://localhost:5000/api/auth/login
             const data = await apiFetch("/auth/login", {
                 method: "POST",
                 body: JSON.stringify({ email: form.email, password: form.password }),
             });
-            localStorage.setItem("token", data.token);       // store JWT
-            localStorage.setItem("authExpiresAt", String(Date.now() + 7 * 24 * 60 * 60 * 1000));
-            onLoginSuccess(data.user);                        // update App state
+            setTokens(data);                  // stores access + refresh
+            onLoginSuccess(data.user);
         } catch (err) {
             setError(err.message);
         } finally {

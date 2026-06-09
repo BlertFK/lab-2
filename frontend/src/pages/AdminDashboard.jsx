@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_BASE } from "../utils/api";
+import AdminHeader from "../components/AdminHeader";
 
 const API = API_BASE;
 function getToken() { return localStorage.getItem("token"); }
@@ -38,7 +39,7 @@ const Modal = ({ title, onClose, onSave, saving, children }) => (
   </div>
 );
 
-export default function AdminDashboard({ onLogout, setPage }) {
+export default function AdminDashboard({ onLogout, setPage, user }) {
   const [tab, setTab] = useState("users");
   const [users, setUsers] = useState([]);
   const [properties, setProperties] = useState([]);
@@ -79,6 +80,13 @@ export default function AdminDashboard({ onLogout, setPage }) {
     } catch { showMsg("Error loading data", "error"); }
     setLoading(false);
   };
+
+  // Load both lists on mount so the header stats are accurate immediately.
+  // The tab effect below only re-fetches the active tab on switch.
+  useEffect(() => {
+    fetchUsers();
+    fetchProperties();
+  }, []);
 
   useEffect(() => {
     if (tab === "users") fetchUsers();
@@ -185,36 +193,16 @@ export default function AdminDashboard({ onLogout, setPage }) {
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', sans-serif" }}>
 
-      {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)", padding: "28px 40px", color: "white", boxShadow: "0 4px 20px rgba(37,99,235,0.3)" }}>
-        <div style={{ maxWidth: 1150, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", opacity: 0.7, marginBottom: 4 }}>RentEase Platform</div>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700 }}>Admin Dashboard</h1>
-          </div>
-          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <div style={{ textAlign: "center", background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 20px" }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{users.length}</div>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Users</div>
-            </div>
-            <div style={{ textAlign: "center", background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 20px" }}>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{properties.length}</div>
-              <div style={{ fontSize: 11, opacity: 0.8 }}>Properties</div>
-            </div>
-            {setPage && (
-              <button onClick={() => setPage("reports")} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-                Reports
-              </button>
-            )}
-            <button onClick={() => setPage("cms")} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-  CMS
-</button>
-            <button onClick={onLogout} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
+      <AdminHeader
+        current="admin"
+        stats={[
+          { value: users.length, label: "Users" },
+          { value: properties.length, label: "Properties" },
+        ]}
+        setPage={setPage}
+        onLogout={onLogout}
+        user={user}
+      />
 
       {/* Toast */}
       {message && (

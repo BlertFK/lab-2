@@ -23,17 +23,26 @@ export default function RegisterPage({ setPage, showToast }) {
       return setError("Password must be at least 6 characters.");
     }
 
-    const roleMap = { buyer: "buyer", seller: "seller", renter: "buyer", agent: "seller" };
-    
+    const parts = form.name.trim().split(/\s+/);
+    const first_name = parts[0] || "";
+    const last_name  = parts.slice(1).join(" ") || first_name;
+
+    // Map UI choice → RBAC role name (Buyer / Seller).
+    // "renter" maps to Buyer; "agent" maps to Seller for now (true Agent role
+    // is admin-assigned per the permission matrix).
+    const roleMap = { buyer: "Buyer", seller: "Seller", renter: "Buyer", agent: "Seller" };
+    const role = roleMap[form.role] || "Buyer";
+
     setLoading(true);
     try {
       await apiFetch("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ 
-          name: form.name, 
-          email: form.email, 
-          password: form.password, 
-          role: roleMap[form.role] 
+        body: JSON.stringify({
+          first_name,
+          last_name,
+          email: form.email,
+          password: form.password,
+          role,
         }),
       });
 

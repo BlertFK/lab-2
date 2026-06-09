@@ -11,8 +11,9 @@ import Button from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/Modal";
 import { Modal } from "../../../components/ui/Modal";
 import { Input } from "../../../components/ui/FormControls";
+import AdminHeader from "../../../components/AdminHeader";
 
-export default function CmsPagesListPage({ onSelectPage }) {
+export default function CmsPagesListPage({ onSelectPage, setPage, onLogout }) {
   const qc = useQueryClient();
 
   const [createOpen, setCreateOpen]   = useState(false);
@@ -55,9 +56,19 @@ export default function CmsPagesListPage({ onSelectPage }) {
   });
 
   return (
-    <div style={{ padding: "32px" }}>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', sans-serif" }}>
+      <AdminHeader
+        title="CMS Pages"
+        current="cms"
+        showBack
+        setPage={setPage}
+        onLogout={onLogout}
+        stats={data?.length ? [{ value: data.length, label: "Pages" }] : []}
+      />
+
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: 700 }}>CMS Pages</h1>
+        <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", margin: 0 }}>All Pages</h2>
         <Button leftIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
           New Page
         </Button>
@@ -169,6 +180,7 @@ export default function CmsPagesListPage({ onSelectPage }) {
         message={`Are you sure you want to delete "${deleteTarget?.title}"? This cannot be undone.`}
         danger
       />
+      </div>
     </div>
   );
 }

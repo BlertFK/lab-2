@@ -267,3 +267,62 @@ db.property_view_logs.find().pretty()
 ## Summary
 
 The repository now implements the Fadil NoSQL scope with a Mongoose connection, three Mongo collections, property view tracking, a cron-based Mongo archiver, and Mongo-backed Top Properties reporting with SQL fallback.
+
+---
+
+## Redis (Blert)
+
+The Redis layer is opt-in. When `REDIS_ENABLED=false` (default in dev) every
+helper in `backend/services/cache.service.js` and `backend/config/redis.js`
+returns a no-op result, so single-instance development works without a Redis
+process. When `REDIS_ENABLED=true` we expect a real Redis available at
+`REDIS_URL` (default `redis://localhost:6379`).
+
+### Key patterns
+
+| Key | Value | TTL | Set by |
+|---|---|---|---|
+| `realestate:revoked:{tokenHash}` | `"1"` | matches refresh token expiry (~7d) | `auth.service.logout`, `refresh` |
+| `realestate:ratelimit:{scope}:{userOrIp}` | counter | 60s | `middleware/redisRateLimit.middleware.js` |
+| `realestate:search:{queryHash}` | JSON result page | 60s | `services/search.service.js` |
+| `realestate:presence:{userId}` | `"1"` | 60s, refreshed on `presence:ping` | `sockets/presence.events.js` |
+
+All Blert helpers prefix keys with `${env.redis.prefix}:` via
+`redis.buildKey()`.
+
+### Refresh-token revocation (B29)
+
+`POST /api/auth/refresh` checks the revoked set BEFORE hitting MySQL. If the
+hash is present, we return 401 immediately. On every successful rotation we
+also push the just-used refresh token onto the revoked set, so it can't be
+replayed even if the row is still active in the DB.
+
+### Rate limiter (B30)
+
+`middleware/redisRateLimit.middleware.js` exposes a Redis-backed limiter that
+falls back to the in-process `express-rate-limit` when Redis is off. This
+lets a multi-instance deployment share a single counter without losing
+single-instance development ergonomics.
+
+### Search cache (B49)
+
+Universal search results are cached for 60 seconds per
+`{user_id, query, entities, limit}` tuple. A second identical request from the
+same browser within that window hits Redis instead of MySQL — useful for the
+debounced SearchBar component which fires on every keystroke.
+
+### Presence (B33)
+
+When a socket connects we `SET realestate:presence:{userId} 1 EX 60` and
+broadcast `presence:online` to the admin room. The client sends `presence:ping`
+every 30 seconds to refresh the TTL. On disconnect (with no other active
+sockets for the user) we DEL the key and broadcast `presence:offline`.
+
+### Cache disabled mode
+
+Because Redis is optional, every helper in `cache.service.js` returns `null` /
+`false` when the client isn't connected. Callers must treat the cache as
+advisory — the source of truth is always MySQL (for refresh tokens) or the
+live socket adapter (for presence). This way feature code works whether
+`REDIS_ENABLED=true` or not, with the only observable difference being a small
+amount of duplicated work under load.

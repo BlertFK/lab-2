@@ -43,12 +43,27 @@ const addSocketAuth = (io) => {
       return next(new Error("Access denied. No token provided."));
     }
 
-    try {
-      socket.user = jwt.verify(token, process.env.JWT_SECRET);
-      return next();
-    } catch {
+    // Accept both new (Blert) access tokens and legacy tokens
+    const tryVerify = (secret) => {
+      if (!secret) return null;
+      try { return jwt.verify(token, secret); } catch { return null; }
+    };
+    const decoded = tryVerify(process.env.JWT_ACCESS_SECRET) || tryVerify(process.env.JWT_SECRET);
+    if (!decoded) {
       return next(new Error("Invalid or expired token."));
     }
+
+    const roles = decoded.roles || (decoded.role ? [decoded.role] : []);
+    socket.user = {
+      id: decoded.id || decoded.sub,
+      sub: decoded.sub || decoded.id,
+      email: decoded.email,
+      role: decoded.role || roles[0] || null,
+      roles,
+      permissions: decoded.permissions || [],
+      name: decoded.name,
+    };
+    return next();
   });
 };
 

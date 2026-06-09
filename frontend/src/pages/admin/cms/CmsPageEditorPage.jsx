@@ -13,6 +13,7 @@ import { Input } from "../../../components/ui/FormControls";
 import { Modal } from "../../../components/ui/Modal";
 import { ChevronLeft, Globe, Save, Clock, Plus, Eye } from "lucide-react";
 import FileUploader from "../../../components/ui/FileUploader";
+import AdminHeader from "../../../components/AdminHeader";
 
 const ReactQuill = lazy(() => import("react-quill"));
 
@@ -29,7 +30,7 @@ const QUILL_MODULES = {
 const API_BASE    = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 const UPLOADS_BASE = API_BASE.replace(/\/api$/, "");
 
-export default function CmsPageEditorPage({ pageId, setPage }) {
+export default function CmsPageEditorPage({ pageId, setPage, onLogout, user: _user }) {
   const id       = pageId;
   const dispatch = useDispatch();
   const qc       = useQueryClient();
@@ -213,16 +214,24 @@ export default function CmsPageEditorPage({ pageId, setPage }) {
 
   return (
     <div className="cms-editor">
-      {/* Topbar */}
+      <AdminHeader
+        title={`CMS Editor — ${page.title}`}
+        current="cms"
+        showBack
+        onBack={() => setPage("cms")}
+        setPage={setPage}
+        onLogout={onLogout}
+      />
+      {/* Page-level subbar with contextual actions */}
       <div className="cms-editor__topbar">
-        <button
-          className="btn-ghost"
-          onClick={() => setPage("cms")}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}
-        >
-          <ChevronLeft size={16} /> Pages
-        </button>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button
+            className="btn-ghost"
+            onClick={() => setPage("cms")}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 14 }}
+          >
+            <ChevronLeft size={16} /> Pages
+          </button>
           <span style={{ fontWeight: 600 }}>{page.title}</span>
           <Badge color={page.is_published ? "green" : "gray"}>
             {page.is_published ? "Published" : "Draft"}

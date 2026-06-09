@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import Chart from "../../components/Chart";
 import ExportMenu from "../../components/ExportMenu";
+import AdminHeader from "../../components/AdminHeader";
 import { apiFetch } from "../../utils/api";
 
 const REPORT_TYPES = [
@@ -54,7 +55,8 @@ const stringifyCell = (value) => {
   return String(value);
 };
 
-export default function ReportBuilderPage({ setPage }) {
+export default function ReportBuilderPage({ setPage, onLogout, user }) {
+  const isAdmin = user?.role === "admin";
   const [reportType, setReportType] = useState("sales");
   const [dateFrom, setDateFrom] = useState(getDefaultDate(-90));
   const [dateTo, setDateTo] = useState(getDefaultDate());
@@ -149,50 +151,77 @@ export default function ReportBuilderPage({ setPage }) {
   };
 
   return (
-    <div className="dashboard">
-      <div className="dash-header">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <div>
-            <h2 className="dash-welcome">Report Builder</h2>
-            <p className="dash-sub">Build domain reports from the current RealEstate data.</p>
-          </div>
-          {setPage && (
-            <button className="btn-secondary" style={{ color: "var(--text)" }} onClick={() => setPage("sellerDashboard")} type="button">
-              Back
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="dash-body">
-        <div className="profile-card" style={{ maxWidth: 1100, marginBottom: "1.5rem" }}>
-          <p className="profile-card-title">Report Type</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
-            {REPORT_TYPES.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setReportType(item.id);
-                  setReport(null);
-                  setError("");
-                }}
-                className={reportType === item.id ? "btn-primary" : "btn-ghost"}
-                style={{
-                  textAlign: "left",
-                  minHeight: 96,
-                  padding: "1rem",
-                  border: reportType === item.id ? "1px solid var(--primary)" : "1px solid var(--border)",
-                  borderRadius: 8,
-                }}
-              >
-                <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>{item.label}</span>
-                <span style={{ display: "block", fontSize: 13, lineHeight: 1.5, opacity: reportType === item.id ? 0.9 : 1 }}>
-                  {item.description}
-                </span>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Segoe UI', sans-serif" }}>
+      {isAdmin ? (
+        <AdminHeader
+          title="Report Builder"
+          current="reports"
+          showBack
+          setPage={setPage}
+          onLogout={onLogout}
+        />
+      ) : (
+        <div className="dash-header">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+            <div>
+              <h2 className="dash-welcome">Report Builder</h2>
+              <p className="dash-sub">Build domain reports from the current RealEstate data.</p>
+            </div>
+            {setPage && (
+              <button className="btn-secondary" style={{ color: "var(--text)" }} onClick={() => setPage("sellerDashboard")} type="button">
+                Back
               </button>
-            ))}
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "32px 40px" }}>
+        <div className="profile-card" style={{ width: "100%", maxWidth: "none", marginBottom: "1.5rem" }}>
+          <p className="profile-card-title" style={{ fontSize: "1.1rem" }}>Report Type</p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+            {REPORT_TYPES.map((item) => {
+              const selected = reportType === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setReportType(item.id);
+                    setReport(null);
+                    setError("");
+                  }}
+                  // No className — .btn-primary forces 40px height + centered text,
+                  // which collapses the card. All styling lives inline so only the
+                  // background/border/color change when the card is selected.
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    minHeight: 110,
+                    padding: "1.1rem 1.25rem",
+                    background: selected ? "#2563eb" : "#fff",
+                    color: selected ? "#fff" : "#1e293b",
+                    border: selected ? "1px solid #2563eb" : "1px solid var(--border)",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    boxShadow: selected
+                      ? "0 4px 14px rgba(37, 99, 235, 0.25)"
+                      : "0 1px 2px rgba(0,0,0,0.04)",
+                    transition: "background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s",
+                  }}
+                >
+                  <span style={{ display: "block", fontWeight: 700, fontSize: 16, marginBottom: 8, lineHeight: 1.3 }}>
+                    {item.label}
+                  </span>
+                  <span style={{ display: "block", fontSize: 14, lineHeight: 1.55, opacity: selected ? 0.92 : 0.75 }}>
+                    {item.description}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", alignItems: "end" }}>
@@ -237,11 +266,11 @@ export default function ReportBuilderPage({ setPage }) {
           </div>
         </div>
 
-        <div className="profile-card" style={{ maxWidth: 1100 }}>
-          <div className="buyer-section-head" style={{ marginBottom: "1rem" }}>
+        <div className="profile-card" style={{ width: "100%", maxWidth: "none" }}>
+          <div className="buyer-section-head" style={{ marginBottom: "1.25rem" }}>
             <div>
-              <h3 className="buyer-section-title">Preview</h3>
-              <p className="dash-sub">{rows.length ? `${rows.length} rows loaded.` : "Run a preview to load report data."}</p>
+              <h3 className="buyer-section-title" style={{ fontSize: "1.25rem" }}>Preview</h3>
+              <p className="dash-sub" style={{ fontSize: 14 }}>{rows.length ? `${rows.length} rows loaded.` : "Run a preview to load report data."}</p>
             </div>
 
             <ExportMenu
@@ -279,20 +308,23 @@ export default function ReportBuilderPage({ setPage }) {
                 </div>
               )}
 
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
+              <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid var(--border)" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
                   <thead>
-                    <tr>
+                    <tr style={{ background: "#f8fafc" }}>
                       {columns.map((column) => (
                         <th
                           key={column}
                           style={{
                             textAlign: "left",
-                            padding: "0.85rem",
-                            borderBottom: "1px solid var(--border)",
-                            color: "var(--text-muted)",
-                            fontSize: 12,
+                            padding: "1rem 1.25rem",
+                            borderBottom: "2px solid var(--border)",
+                            color: "#475569",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            letterSpacing: "0.05em",
                             textTransform: "uppercase",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {column.replace(/_/g, " ")}
@@ -302,15 +334,19 @@ export default function ReportBuilderPage({ setPage }) {
                   </thead>
                   <tbody>
                     {rows.map((row, index) => (
-                      <tr key={index}>
+                      <tr
+                        key={index}
+                        style={{ background: index % 2 === 0 ? "#fff" : "#fafafa" }}
+                      >
                         {columns.map((column) => (
                           <td
                             key={column}
                             style={{
-                              padding: "0.85rem",
-                              borderBottom: "1px solid var(--border)",
-                              color: "var(--text)",
-                              fontSize: 14,
+                              padding: "0.95rem 1.25rem",
+                              borderBottom: "1px solid #f1f5f9",
+                              color: "#1e293b",
+                              fontSize: 15,
+                              lineHeight: 1.5,
                             }}
                           >
                             {stringifyCell(row[column]) || "-"}

@@ -22,11 +22,28 @@ import CmsPagesListPage from "./pages/admin/cms/CmsPagesListPage";
 import CmsPageEditorPage from "./pages/admin/cms/CmsPageEditorPage";
 import CmsPublicPage from "./pages/public/CmsPublicPage";
 
+// Blert pages
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProfilePage from "./pages/ProfilePage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import UsersListPage from "./pages/admin/UsersListPage";
+import UserDetailPage from "./pages/admin/UserDetailPage";
+import RolesPage from "./pages/admin/RolesPage";
+import AuditLogPage from "./pages/admin/AuditLogPage";
+import SettingsPage from "./pages/admin/SettingsPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import SearchResultsPage from "./pages/SearchResultsPage";
+
 // Known fixed pages - anything else is treated as a potential CMS slug
 const FIXED_PAGES = new Set([
   "home", "login", "register", "admin", "dashboard", "properties",
   "propertyDetails", "agencies", "agencyDetail", "plans", "reports",
   "cms", "cms-editor",
+  // Blert pages
+  "forgot-password", "reset-password", "profile", "change-password",
+  "admin-users", "admin-user-detail", "admin-roles", "admin-audit",
+  "admin-settings", "notifications", "search",
 ]);
 
 const getPageFromPath = (pathname) => {
@@ -43,6 +60,18 @@ const getPageFromPath = (pathname) => {
   if (pathname === "/reports") return "reports";
   if (pathname === "/admin/cms/editor") return "cms-editor";
   if (pathname === "/admin/cms") return "cms";
+  // Blert
+  if (pathname === "/forgot-password") return "forgot-password";
+  if (pathname === "/reset-password") return "reset-password";
+  if (pathname === "/profile") return "profile";
+  if (pathname === "/change-password") return "change-password";
+  if (pathname === "/admin/users") return "admin-users";
+  if (pathname.startsWith("/admin/users/")) return "admin-user-detail";
+  if (pathname === "/admin/roles") return "admin-roles";
+  if (pathname === "/admin/audit") return "admin-audit";
+  if (pathname === "/admin/settings") return "admin-settings";
+  if (pathname === "/notifications") return "notifications";
+  if (pathname === "/search") return "search";
   // Any other path like /test or /about → treat as CMS slug
   const slug = pathname.replace(/^\//, "");
   if (slug) return `cms-slug:${slug}`;
@@ -63,12 +92,25 @@ const getPathFromPage = (page) => {
   if (page === "reports") return "/reports";
   if (page === "cms") return "/admin/cms";
   if (page === "cms-editor") return "/admin/cms/editor";
+  if (page === "forgot-password") return "/forgot-password";
+  if (page === "reset-password") return "/reset-password";
+  if (page === "profile") return "/profile";
+  if (page === "change-password") return "/change-password";
+  if (page === "admin-users") return "/admin/users";
+  if (page === "admin-user-detail") return "/admin/users/detail";
+  if (page === "admin-roles") return "/admin/roles";
+  if (page === "admin-audit") return "/admin/audit";
+  if (page === "admin-settings") return "/admin/settings";
+  if (page === "notifications") return "/notifications";
+  if (page === "search") return "/search";
   if (page.startsWith("cms-slug:")) return `/${page.replace("cms-slug:", "")}`;
   return "/";
 };
 
 export default function App() {
   const [selectedCmsPageId, setSelectedCmsPageId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [page, setPageState] = useState(() => {
     return getPageFromPath(window.location.pathname);
@@ -108,6 +150,12 @@ export default function App() {
     if (params?.id && (pageName === "agency-detail" || pageName === "agencyDetail")) {
       localStorage.setItem("activeAgencyId", params.id);
       setSelectedAgency({ id: params.id });
+    }
+    if (params?.id && pageName === "admin-user-detail") {
+      setSelectedUserId(params.id);
+    }
+    if (pageName === "search" && params?.q !== undefined) {
+      setSearchQuery(params.q || "");
     }
     if (pageName === "property-detail") {
       setPageState("propertyDetails");
@@ -217,8 +265,50 @@ export default function App() {
         <RegisterPage setPage={setPage} showToast={showToast} />
       )}
 
+      {page === "forgot-password" && (
+        <ForgotPasswordPage setPage={setPage} showToast={showToast} />
+      )}
+      {page === "reset-password" && (
+        <ResetPasswordPage setPage={setPage} showToast={showToast} />
+      )}
+
+      {page === "profile" && user && (
+        <ProfilePage user={user} setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+      {page === "change-password" && user && (
+        <ChangePasswordPage user={user} setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+
+      {page === "admin-users" && user?.role === "admin" && (
+        <UsersListPage
+          setPage={setPage}
+          onLogout={handleLogout}
+          onSelectUser={(id) => { setSelectedUserId(id); setPageState("admin-user-detail"); }}
+        />
+      )}
+      {page === "admin-user-detail" && user?.role === "admin" && (
+        <UserDetailPage userId={selectedUserId} setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+      {page === "admin-roles" && user?.role === "admin" && (
+        <RolesPage setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+      {page === "admin-audit" && user?.role === "admin" && (
+        <AuditLogPage setPage={setPage} onLogout={handleLogout} />
+      )}
+      {page === "admin-settings" && user?.role === "admin" && (
+        <SettingsPage setPage={setPage} onLogout={handleLogout} showToast={showToast} />
+      )}
+
+      {page === "notifications" && user && (
+        <NotificationsPage user={user} setPage={setPage} onLogout={handleLogout} />
+      )}
+
+      {page === "search" && user && (
+        <SearchResultsPage q={searchQuery} user={user} setPage={setPage} onLogout={handleLogout} />
+      )}
+
       {page === "admin" && user?.role === "admin" && (
-        <AdminDashboard onLogout={handleLogout} setPage={setPage} />
+        <AdminDashboard onLogout={handleLogout} setPage={setPage} user={user} />
       )}
 
       {page === "dashboard" && user && (
@@ -226,12 +316,18 @@ export default function App() {
       )}
 
       {page === "reports" && (user?.role === "admin" || user?.role === "seller") && (
-        <ReportBuilderPage setPage={user?.role === "seller" ? () => setPage("dashboard") : () => setPage("admin")} />
+        <ReportBuilderPage
+          setPage={setPage}
+          onLogout={handleLogout}
+          user={user}
+        />
       )}
 
       {page === "cms" && user?.role === "admin" && (
         <CmsPagesListPage
           setPage={setPage}
+          onLogout={handleLogout}
+          user={user}
           onSelectPage={(id) => {
             setSelectedCmsPageId(id);
             setPageState("cms-editor");
@@ -243,6 +339,8 @@ export default function App() {
         <CmsPageEditorPage
           pageId={selectedCmsPageId}
           setPage={setPage}
+          onLogout={handleLogout}
+          user={user}
         />
       )}
 
